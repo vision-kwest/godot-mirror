@@ -1,0 +1,1 @@
+INDEX VERSION 1.126+/home/kwesi/Desktop/git_proj/godot/platform/android/.metadata/.plugins/org.eclipse.jdt.core

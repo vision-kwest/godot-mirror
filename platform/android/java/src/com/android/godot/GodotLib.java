@@ -33,7 +33,7 @@ package com.android.godot;
 public class GodotLib {
 
 
-     public static GodotIO io;
+     //public static GodotIO io;
 
      static {
 	 System.loadLibrary("godot_android");
@@ -45,6 +45,7 @@ public class GodotLib {
      */
 
      public static native void initialize(Godot p_instance,boolean need_reload_hook,String[] p_cmdline);
+     public static native void initializeWallpaper(GodotWallpaperService p_instance,boolean need_reload_hook,String[] p_cmdline);
      public static native void resize(int width, int height,boolean reload);
      public static native void newcontext();
      public static native void quit();

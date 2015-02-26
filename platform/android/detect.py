@@ -67,6 +67,7 @@ def configure(env):
 	env.android_source_modules.append("../libs/google_play_services")	
 	env.android_source_modules.append("../libs/downloader_library")	
 	env.android_source_modules.append("../libs/play_licensing")	
+	env.android_source_modules.append("../libs/gl_wallpaper_service")	
 	
 	ndk_platform=""
 

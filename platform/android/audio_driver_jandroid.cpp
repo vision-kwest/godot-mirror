@@ -123,7 +123,7 @@ void AudioDriverAndroid::setup( jobject p_io) {
 	if(_init_audio != 0) {
 		__android_log_print(ANDROID_LOG_INFO,"godot","*******GOT METHOD _init_audio ok!!");
 	} else {
-		__android_log_print(ANDROID_LOG_INFO,"godot","audioinit ok!");
+		__android_log_print(ANDROID_LOG_INFO,"godot","_init_audio is ZERO!");
 	}
 
 	_write_buffer = env->GetMethodID(cls, "audioWriteShortBuffer", "([S)V");

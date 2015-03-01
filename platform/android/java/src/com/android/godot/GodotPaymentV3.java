@@ -65,27 +65,27 @@ public class GodotPaymentV3 extends Godot.SingletonBase {
 	
 	public void callbackSuccess(String ticket, String signature){
 //        Log.d(this.getClass().getName(), "PRE-Send callback to purchase success");
-        GodotLib.callobject(purchaseCallbackId, "purchase_success", new Object[]{ticket, signature});
+		activity.mEngine.callobject(purchaseCallbackId, "purchase_success", new Object[]{ticket, signature});
 //    	Log.d(this.getClass().getName(), "POST-Send callback to purchase success");
 }
 
 	public void callbackSuccessProductMassConsumed(String ticket, String signature, String sku){
 //        Log.d(this.getClass().getName(), "PRE-Send callback to consume success");
-        GodotLib.calldeferred(purchaseCallbackId, "consume_success", new Object[]{ticket, signature, sku});
+        activity.mEngine.calldeferred(purchaseCallbackId, "consume_success", new Object[]{ticket, signature, sku});
 //    	Log.d(this.getClass().getName(), "POST-Send callback to consume success");
 	}
 
 	public void callbackSuccessNoUnconsumedPurchases(){
-        GodotLib.calldeferred(purchaseCallbackId, "no_validation_required", new Object[]{});
+        activity.mEngine.calldeferred(purchaseCallbackId, "no_validation_required", new Object[]{});
 	}
 	
 	public void callbackFail(){
-                GodotLib.calldeferred(purchaseCallbackId, "purchase_fail", new Object[]{});
+                activity.mEngine.calldeferred(purchaseCallbackId, "purchase_fail", new Object[]{});
 //                GodotLib.callobject(purchaseCallbackId, "purchase_fail", new Object[]{});
 	}
 	
 	public void callbackCancel(){
-		GodotLib.calldeferred(purchaseCallbackId, "purchase_cancel", new Object[]{});
+		activity.mEngine.calldeferred(purchaseCallbackId, "purchase_cancel", new Object[]{});
 //		GodotLib.callobject(purchaseCallbackId, "purchase_cancel", new Object[]{});
 	}
 	

@@ -74,16 +74,16 @@ public class GodotView extends GLSurfaceView {
     */
 	private static boolean use_gl2=false;
 
-	private Godot activity;
+	public Godot activity;
 
-	//public GodotView(Context context,GodotIO p_io,boolean p_use_gl2, GodotUtil activity) {
-	public GodotView(Context context,GodotIO p_io,boolean p_use_gl2) {
+	public GodotView(Context context,GodotIO p_io,boolean p_use_gl2, Godot p_activity) {
+	//public GodotView(Context context,GodotIO p_io,boolean p_use_gl2) {
 		super(context);
 		ctx=context;
 		io=p_io;
 		use_gl2=p_use_gl2;
 
-		//activity = p_activity;
+		activity = p_activity;
 
 		if (!p_io.needsReloadHooks()) {
 			//will only work on SDK 11+!!
@@ -180,11 +180,11 @@ public class GodotView extends GLSurfaceView {
 			int button = get_godot_button(keyCode);
 			int device = event.getDeviceId();
 
-			GodotLib.joybutton(device, button, false);
+			activity.mEngine.joybutton(device, button, false);
 			return true;
 		} else {
 
-			GodotLib.key(keyCode, event.getUnicodeChar(0), false);
+			activity.mEngine.key(keyCode, event.getUnicodeChar(0), false);
 		};
 		return super.onKeyUp(keyCode, event);
 	};
@@ -192,7 +192,7 @@ public class GodotView extends GLSurfaceView {
 	@Override public boolean onKeyDown(int keyCode, KeyEvent event) {
 
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			GodotLib.quit();
+			activity.mEngine.quit();
 			// press 'back' button should not terminate program
 			//	normal handle 'back' event in game logic
 			return true;
@@ -213,11 +213,11 @@ public class GodotView extends GLSurfaceView {
 			int device = event.getDeviceId();
 			//Log.e(TAG, String.format("joy button down! button %x, %d, device %d", keyCode, button, device));
 
-			GodotLib.joybutton(device, button, true);
+			activity.mEngine.joybutton(device, button, true);
 			return true;
 
 		} else {
-			GodotLib.key(keyCode, event.getUnicodeChar(0), true);
+			activity.mEngine.key(keyCode, event.getUnicodeChar(0), true);
 		};
 		return super.onKeyDown(keyCode, event);
 	}
@@ -258,28 +258,28 @@ public class GodotView extends GLSurfaceView {
 		if (val != last_axis_values[0]) {
 			last_axis_values[0] = val;
 			//Log.e(TAG, String.format("axis moved! axis %d, value %f", 0, val));
-			GodotLib.joyaxis(device_id, 0, val);
+			activity.mEngine.joyaxis(device_id, 0, val);
 		};
 
 		val = axis_value(p_event, device, MotionEvent.AXIS_Y, p_pos);
 		if (val != last_axis_values[1]) {
 			last_axis_values[1] = val;
 			//Log.e(TAG, String.format("axis moved! axis %d, value %f", 1, val));
-			GodotLib.joyaxis(device_id, 1, val);
+			activity.mEngine.joyaxis(device_id, 1, val);
 		};
 
 		val = axis_value(p_event, device, MotionEvent.AXIS_Z, p_pos);
 		if (val != last_axis_values[2]) {
 			last_axis_values[2] = val;
 			//Log.e(TAG, String.format("axis moved! axis %d, value %f", 2, val));
-			GodotLib.joyaxis(device_id, 2, val);
+			activity.mEngine.joyaxis(device_id, 2, val);
 		};
 
 		val = axis_value(p_event, device, MotionEvent.AXIS_RZ, p_pos);
 		if (val != last_axis_values[3]) {
 			last_axis_values[3] = val;
 			//Log.e(TAG, String.format("axis moved! axis %d, value %f", 3, val));
-			GodotLib.joyaxis(device_id, 3, val);
+			activity.mEngine.joyaxis(device_id, 3, val);
 		};
 
 		val = axis_value(p_event, device, MotionEvent.AXIS_LTRIGGER, p_pos);
@@ -287,7 +287,7 @@ public class GodotView extends GLSurfaceView {
 			last_axis_values[4] = val;
 			if ((val != 0) != (last_axis_buttons[4])) {
 				last_axis_buttons[4] = (val != 0);
-				GodotLib.joybutton(device_id, 6, (val != 0));
+				activity.mEngine.joybutton(device_id, 6, (val != 0));
 			};
 		};
 
@@ -296,7 +296,7 @@ public class GodotView extends GLSurfaceView {
 			last_axis_values[5] = val;
 			if ((val != 0) != (last_axis_buttons[5])) {
 				last_axis_buttons[5] = (val != 0);
-				GodotLib.joybutton(device_id, 7, (val != 0));
+				activity.mEngine.joybutton(device_id, 7, (val != 0));
 			};
 		};
 
@@ -304,21 +304,21 @@ public class GodotView extends GLSurfaceView {
 
 		if (last_axis_buttons[0] != (val > 0)) {
 			last_axis_buttons[0] = val > 0;
-			GodotLib.joybutton(device_id, 12, val > 0);
+			activity.mEngine.joybutton(device_id, 12, val > 0);
 		};
 		if (last_axis_buttons[1] != (val < 0)) {
 			last_axis_buttons[1] = val < 0;
-			GodotLib.joybutton(device_id, 13, val > 0);
+			activity.mEngine.joybutton(device_id, 13, val > 0);
 		};
 
 		val = axis_value(p_event, device, MotionEvent.AXIS_HAT_X, p_pos);
 		if (last_axis_buttons[2] != (val < 0)) {
 			last_axis_buttons[2] = val < 0;
-			GodotLib.joybutton(device_id, 14, val < 0);
+			activity.mEngine.joybutton(device_id, 14, val < 0);
 		};
 		if (last_axis_buttons[3] != (val > 0)) {
 			last_axis_buttons[3] = val > 0;
-			GodotLib.joybutton(device_id, 15, val > 0);
+			activity.mEngine.joybutton(device_id, 15, val > 0);
 		};
 	};
 
@@ -374,7 +374,7 @@ public class GodotView extends GLSurfaceView {
 					new ConfigChooser(5, 6, 5, 0, depth, stencil) );
 
 		/* Set the renderer responsible for frame rendering */
-		setRenderer(new GodotRenderer());
+		setRenderer(new GodotRenderer(activity.mEngine));
 	}
 
 	private static class ContextFactory implements GLSurfaceView.EGLContextFactory {

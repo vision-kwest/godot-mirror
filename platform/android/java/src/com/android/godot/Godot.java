@@ -112,6 +112,8 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
     private boolean mStatePaused;
     private int mState;
 
+    static public GodotLib mEngine = new GodotLib(); 
+    
     private void setState(int newState) {
         if (mState != newState) {
             mState = newState;
@@ -130,7 +132,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
         
 		protected void registerClass(String p_name, String[] p_methods) {
 
-			GodotLib.singleton(p_name,this);
+			Godot.mEngine.singleton(p_name,this);
 
 			Class clazz = getClass();
 			Method[] methods = clazz.getDeclaredMethods();
@@ -161,7 +163,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 				String[] pt = new String[ptr.size()];
 				ptr.toArray(pt);
 
-				GodotLib.method(p_name,method.getName(),method.getReturnType().getName(),pt);
+				Godot.mEngine.method(p_name,method.getName(),method.getReturnType().getName(),pt);
 
 
 			}
@@ -242,7 +244,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 
 	public void onVideoInit(boolean use_gl2) {
 
-		mView = new GodotView(getApplication(),io,use_gl2);
+		mView = new GodotView(getApplication(),io,use_gl2, this);
 		setContentView(mView);
 
 		/*
@@ -346,7 +348,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 			command_line=new_cmdline;
 		}
 
-		io = new GodotIO(this);
+		io = new GodotIO(this, this.mEngine);
 		io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
 		/*
 		GodotLib.io=io;
@@ -358,7 +360,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 		        Log.d("GODOT","   " + command_line[w]);
 		    }
 		}*/
-		GodotLib.initialize(this,io.needsReloadHooks(),command_line);
+		mEngine.initialize(this,io.needsReloadHooks(),command_line);
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
@@ -541,7 +543,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 		}
 		mView.onPause();
 		mSensorManager.unregisterListener(this);
-		GodotLib.focusout();
+		mEngine.focusout();
 
 		for(int i=0;i<singleton_count;i++) {
 			singletons[i].onMainPause();
@@ -559,7 +561,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 
 		mView.onResume();
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-		GodotLib.focusin();
+		mEngine.focusin();
 
 		for(int i=0;i<singleton_count;i++) {
 
@@ -574,7 +576,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 		float x = event.values[0];
 		float y = event.values[1];
 		float z = event.values[2];
-		GodotLib.accelerometer(x,y,z);
+		mEngine.accelerometer(x,y,z);
 	}
 
 	@Override public final void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -588,7 +590,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 
 			System.out.printf("** BACK REQUEST!\n");
 
-			GodotLib.quit();
+			mEngine.quit();
 			return true;
 		}
 		System.out.printf("** OTHER KEY!\n");
@@ -600,7 +602,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 	@Override public void onBackPressed() {
 
 		System.out.printf("** BACK REQUEST!\n");
-		GodotLib.quit();
+		mEngine.quit();
 	}
 
 	public void forceQuit() {
@@ -679,28 +681,28 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 		switch(event.getAction()&MotionEvent.ACTION_MASK) {
 
 			case MotionEvent.ACTION_DOWN: {
-				GodotLib.touch(0,0,evcount,arr);
+				mEngine.touch(0,0,evcount,arr);
 				//System.out.printf("action down at: %f,%f\n", event.getX(),event.getY());
 			} break;
 			case MotionEvent.ACTION_MOVE: {
-				GodotLib.touch(1,0,evcount,arr);
+				mEngine.touch(1,0,evcount,arr);
 				//for(int i=0;i<event.getPointerCount();i++) {
 				//	System.out.printf("%d - moved to: %f,%f\n",i, event.getX(i),event.getY(i));
 				//}
 			} break;
 			case MotionEvent.ACTION_POINTER_UP: {
 				int pointer_idx = event.getActionIndex();
-				GodotLib.touch(4,pointer_idx,evcount,arr);
+				mEngine.touch(4,pointer_idx,evcount,arr);
 				//System.out.printf("%d - s.up at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
 			} break;
 			case MotionEvent.ACTION_POINTER_DOWN: {
 				int pointer_idx = event.getActionIndex();
-				GodotLib.touch(3,pointer_idx,evcount,arr);
+				mEngine.touch(3,pointer_idx,evcount,arr);
 				//System.out.printf("%d - s.down at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
 			} break;
 			case MotionEvent.ACTION_CANCEL:
 			case MotionEvent.ACTION_UP: {
-				GodotLib.touch(2,0,evcount,arr);
+				mEngine.touch(2,0,evcount,arr);
 				//for(int i=0;i<event.getPointerCount();i++) {
 				//	System.out.printf("%d - up! %f,%f\n",i, event.getX(i),event.getY(i));
 				//}
@@ -728,8 +730,8 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 					int keyCode;
 					if ((keyCode = cc[i]) != 0) {
 						// Simulate key down and up...
-						GodotLib.key(0, keyCode, true);
-						GodotLib.key(0, keyCode, false);
+						mEngine.key(0, keyCode, true);
+						mEngine.key(0, keyCode, false);
 					}
 				}
 			}

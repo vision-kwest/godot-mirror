@@ -13,6 +13,8 @@ import android.util.Log;
 import android.provider.Settings.Secure;
 
 public class GodotWallpaperService extends GLWallpaperService {
+	static public int count = 0;
+	static public int count_engine = 0;
 	static public GodotIO io;
 	//public GodotView mView;
 
@@ -25,7 +27,9 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 	public GodotWallpaperService() {
 		super();
-		Log.d("Godot", "GodotWallpaperService()");
+		count++;
+		Log.d("Godot", "GodotWallpaperService("+count+")");
+		
 	}
 
 	public Engine onCreateEngine() {
@@ -40,15 +44,23 @@ public class GodotWallpaperService extends GLWallpaperService {
 		//setContentView(mView);
 	}
 
-	
+	public void forceQuit() {
+
+		System.exit(0);
+	}
 	class MyEngine extends GLEngine implements SharedPreferences.OnSharedPreferenceChangeListener, SensorEventListener {
 		GodotRenderer mRenderer;
+		GodotLib mEngine;
+		final int id;
 
 		public MyEngine() {
 			super();
-			Log.d("Godot", "GodotWallpaperService.MyEngine.MyEngine()");
+			GodotWallpaperService.count_engine++;
+			id = GodotWallpaperService.count_engine; 
+			Log.d("Godot", "GodotWallpaperService.MyEngine.MyEngine("+GodotWallpaperService.count_engine+")");
 			// handle prefs, other initialization
-			mRenderer = new GodotRenderer();	
+			mEngine = new GodotLib();
+			mRenderer = new GodotRenderer(mEngine, GodotWallpaperService.this, id);	
 			setEGLContextClientVersion(2);
 			setRenderer(mRenderer);
 			setRenderMode(RENDERMODE_CONTINUOUSLY);
@@ -91,13 +103,13 @@ public class GodotWallpaperService extends GLWallpaperService {
 			// Add touch events
 			setTouchEventsEnabled(true);
 
-			
+			/*
 			command_line = new String[0];
-			GodotWallpaperService.this.io = new GodotIO(GodotWallpaperService.this);
+			GodotWallpaperService.this.io = new GodotIO(GodotWallpaperService.this, mEngine);
 			GodotWallpaperService.this.io.unique_id = Secure.getString(GodotWallpaperService.this.getContentResolver(), Secure.ANDROID_ID);
 			//GodotLib.io=GodotWallpaperService.this.io;
-			GodotLib.initializeWallpaper(GodotWallpaperService.this, GodotWallpaperService.this.io.needsReloadHooks(), command_line);
-			
+			mEngine.initializeWallpaper(GodotWallpaperService.this, GodotWallpaperService.this.io.needsReloadHooks(), command_line);
+			*/
 			
 			// Get sensormanager and register as listener.
 			mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -135,13 +147,31 @@ public class GodotWallpaperService extends GLWallpaperService {
 		
 		public void togglePause(boolean visible){
 			if (visible){
+				/*
+				if (this.mIsInitialized == false){
+					command_line = new String[0];
+					GodotWallpaperService.this.io = new GodotIO(GodotWallpaperService.this, mEngine);
+					GodotWallpaperService.this.io.unique_id = Secure.getString(GodotWallpaperService.this.getContentResolver(), Secure.ANDROID_ID);
+					//GodotLib.io=GodotWallpaperService.this.io;
+					mEngine.initializeWallpaper(GodotWallpaperService.this, GodotWallpaperService.this.io.needsReloadHooks(), command_line);
+					this.mIsInitialized = true;
+				}
+				*/
 				mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-				GodotLib.focusin();
-				Log.d("Godot", "GodotWallpaperService.MyEngine.togglePause( IN_FOCUS )");
+				if (this.mRenderer.mWallpaper == null || this.mRenderer.mWallpaper != null && this.mRenderer.mIsWallpaperInitialized){
+					mEngine.focusin();
+					Log.d("Godot", "GodotWallpaperService.MyEngine.togglePause( IN_FOCUS )");
+				}else{
+					Log.d("Godot", "Skipping in-focus change because engine not initialized yet.");
+				}
 			}else{
 				mSensorManager.unregisterListener(this);
-				GodotLib.focusout();
-				Log.d("Godot", "GodotWallpaperService.MyEngine.togglePause( OUT_FOCUS )");
+				if (this.mRenderer.mWallpaper == null || this.mRenderer.mWallpaper != null && this.mRenderer.mIsWallpaperInitialized){
+					mEngine.focusout();
+					Log.d("Godot", "GodotWallpaperService.MyEngine.togglePause( OUT_FOCUS )");
+				}else{
+					Log.d("Godot", "Skipping out-focus change because engine not initialized yet.");				
+				}
 			}			
 		}
 	}

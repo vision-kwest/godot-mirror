@@ -44,24 +44,24 @@ public class GodotLib {
      * @param height the current view height
      */
 
-     public static native void initialize(Godot p_instance,boolean need_reload_hook,String[] p_cmdline);
-     public static native void initializeWallpaper(GodotWallpaperService p_instance,boolean need_reload_hook,String[] p_cmdline);
-     public static native void resize(int width, int height,boolean reload);
-     public static native void newcontext();
-     public static native void quit();
-     public static native void step();
-     public static native void touch(int what,int pointer,int howmany, int[] arr);
-     public static native void accelerometer(float x, float y, float z);
-	 public static native void key(int p_scancode, int p_unicode_char, boolean p_pressed);
-	 public static native void joybutton(int p_device, int p_but, boolean p_pressed);
-	 public static native void joyaxis(int p_device, int p_axis, float p_value);
-     public static native void focusin();
-     public static native void focusout();
-     public static native void audio();
-     public static native void singleton(String p_name,Object p_object);
-     public static native void method(String p_sname,String p_name,String p_ret,String[] p_params);
-     public static native String getGlobal(String p_key);
-	public static native void callobject(int p_ID, String p_method, Object[] p_params);
-	public static native void calldeferred(int p_ID, String p_method, Object[] p_params);
+     public native void initialize(Godot p_instance,boolean need_reload_hook,String[] p_cmdline);
+     public native void initializeWallpaper(GodotWallpaperService p_instance,boolean need_reload_hook,String[] p_cmdline);
+     public native void resize(int width, int height,boolean reload);
+     public native void newcontext();
+     public native void quit();
+     public native void step();
+     public native void touch(int what,int pointer,int howmany, int[] arr);
+     public native void accelerometer(float x, float y, float z);
+	 public native void key(int p_scancode, int p_unicode_char, boolean p_pressed);
+	 public native void joybutton(int p_device, int p_but, boolean p_pressed);
+	 public native void joyaxis(int p_device, int p_axis, float p_value);
+     public native void focusin();
+     public native void focusout();
+     public native void audio();
+     public native void singleton(String p_name,Object p_object);
+     public native void method(String p_sname,String p_name,String p_ret,String[] p_params);
+     public native String getGlobal(String p_key);
+	public native void callobject(int p_ID, String p_method, Object[] p_params);
+	public native void calldeferred(int p_ID, String p_method, Object[] p_params);
 
 }

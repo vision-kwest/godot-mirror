@@ -44,6 +44,9 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.provider.Settings.Secure;
+import android.os.SystemClock;
+
 /**
  * A simple GLSurfaceView sub-class that demonstrate how to perform
  * OpenGL ES 2.0 rendering into a GL Surface. Note the following important
@@ -68,21 +71,89 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 	//private static boolean firsttime=true;
 	public boolean firsttime;
 	public int frame_count;	
+	public GodotLib mEngine;
+	public GodotWallpaperService mWallpaper;
+	public boolean mIsWallpaperInitialized;	
+	static public int count = 0;
+	public int mMyEngineId;
 	
-	public GodotRenderer()
+	public int mSkippedWidth;
+	public int mSkippedHeight;
+	public boolean mSkippedNotFirstTime;
+	
+	public void init(){
+		String [] command_line = new String[0];
+		mWallpaper.io = new GodotIO(mWallpaper, mEngine);
+		mWallpaper.io.unique_id = Secure.getString(mWallpaper.getContentResolver(), Secure.ANDROID_ID);
+		//GodotLib.io=GodotWallpaperService.this.io;
+		mEngine.initializeWallpaper(mWallpaper, mWallpaper.io.needsReloadHooks(), command_line);
+		mIsWallpaperInitialized = true;
+		
+		// Handle skipped events
+		mEngine.focusin();
+		mEngine.newcontext();
+		mEngine.resize(mSkippedWidth, mSkippedHeight, mSkippedNotFirstTime);
+	}
+	
+	public GodotRenderer(GodotLib engine, GodotWallpaperService wallpaper, int id)
 	{
 		super();
+		count++;
 		frame_count = 0;
 		firsttime = true;
-		Log.d("Godot", "GodotRenderer() - CONSTRUCTOR");
+		mEngine = engine;
+		mWallpaper = wallpaper;
+		mIsWallpaperInitialized = false;
+		mMyEngineId = id;
+		Log.d("Godot", "GodotRenderer("+count+") - CONSTRUCTOR");
+		
+		mSkippedWidth = 50;
+		mSkippedHeight = 50;
+		mSkippedNotFirstTime = false;
 	}
+	
+	public GodotRenderer(GodotLib engine)
+	{
+		super();
+		count++;
+		frame_count = 0;
+		firsttime = true;
+		mEngine = engine;
+		mWallpaper = null;
+		mIsWallpaperInitialized = false;
+		Log.d("Godot", "GodotRenderer("+count+") - CONSTRUCTOR");
+		
+		mSkippedWidth = -1;
+		mSkippedHeight = -1;
+		mSkippedNotFirstTime = false;	}
+	
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
 		if (frame_count % 100 == 0 || frame_count == 0){
 			Log.d("Godot", "GodotRenderer.onDrawFrame("+frame_count+")");
 		}
-		GodotLib.step();
+		if (frame_count == 0 && mWallpaper != null){
+			if (mMyEngineId == 1){
+				this.init();
+			}else{
+				//Log.d("Godot", "Slepping: Zzzzzzz...");
+				//SystemClock.sleep(1000);
+				
+				mIsWallpaperInitialized = true;
+				
+				// Handle skipped events
+				//mEngine.focusin();
+				mEngine.newcontext();
+				mEngine.resize(mSkippedWidth, mSkippedHeight, mSkippedNotFirstTime);
+			}
+		}
+		boolean isCurrThread = mMyEngineId == GodotWallpaperService.count_engine;
+		if ( mWallpaper == null || mWallpaper != null && this.mIsWallpaperInitialized && isCurrThread ){
+			mEngine.step();
+		}else{
+			Log.d("Godot", "Skipping context re-draw because engine not initialized yet. Is current thread:"+isCurrThread);			
+		}
 		for(int i=0;i<Godot.singleton_count;i++) {
 			Godot.singletons[i].onGLDrawFrame(gl);
 		}
@@ -90,8 +161,16 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 	}
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
+		boolean isCurrThread = mMyEngineId == GodotWallpaperService.count_engine;
 		Log.d("Godot", "GodotRenderer.onSurfaceChanged()");
-		GodotLib.resize(width, height,!firsttime);
+		if ( mWallpaper == null || mWallpaper != null && this.mIsWallpaperInitialized && isCurrThread ){
+			mEngine.resize(width, height,!firsttime);
+		}else{
+			Log.d("Godot", "Skipping context re-size because engine not initialized yet. Is current thread:"+isCurrThread);
+			mSkippedWidth = width;
+			mSkippedHeight = height;
+			mSkippedNotFirstTime = !firsttime;
+		}
 		firsttime=false;
 		for(int i=0;i<Godot.singleton_count;i++) {
 			Godot.singletons[i].onGLSurfaceChanged(gl, width, height);
@@ -99,10 +178,15 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 	}
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+		boolean isCurrThread = mMyEngineId == GodotWallpaperService.count_engine;
 		Log.d("Godot", "GodotRenderer.onSurfaceCreated()");
 		if (firsttime){
 			Log.d("Godot", "GodotLib.newcontext() - NEW CONTEXT");
-			GodotLib.newcontext();
+			if ( mWallpaper == null || mWallpaper != null && this.mIsWallpaperInitialized && isCurrThread ){
+				mEngine.newcontext();
+			}else{
+				Log.d("Godot", "Skipping context re-build because engine not initialized yet. Is current thread:"+isCurrThread);
+			}
 		}
 	}
 }

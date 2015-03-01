@@ -949,19 +949,23 @@ static void _initialize_java_modules() {
 
 JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobject obj)
 {
-
+	__android_log_print(ANDROID_LOG_INFO,"godot","GodotLib.step() %p-%i\n",env,Thread::get_caller_ID());
 
 	ThreadAndroid::setup_thread();
+	__android_log_print(ANDROID_LOG_INFO,"godot","1");
 
 	//__android_log_print(ANDROID_LOG_INFO,"godot","**STEP EVENT! - %p-%i\n",env,Thread::get_caller_ID());
 
 
 	suspend_mutex->lock();
+	__android_log_print(ANDROID_LOG_INFO,"godot","2");
 	input_mutex->lock();
+	__android_log_print(ANDROID_LOG_INFO,"godot","3");
 	//first time step happens, initialize
 	if (step == 0) {
 		// ugly hack to initialize the rest of the engine
 		// because of the way android forces you to do everything with threads
+		__android_log_print(ANDROID_LOG_INFO,"godot","GodotLib.step() - frame zero");
 
 		java_class_wrapper = memnew( JavaClassWrapper(_godot_instance ));
 		Globals::get_singleton()->add_singleton(Globals::Singleton("JavaClassWrapper",java_class_wrapper));
@@ -974,6 +978,7 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 		return;
 	};
 	if (step == 1) {
+		__android_log_print(ANDROID_LOG_INFO,"godot","GodotLib.step() - frame one");
 		if (!Main::start()) {
 
 			input_mutex->unlock();
@@ -984,7 +989,7 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 		os_android->main_loop_begin();
 		++step;
 	}
-
+	__android_log_print(ANDROID_LOG_INFO,"godot","4");
 	while(pointer_events.size()) {
 
 		JAndroidPointerEvent jpe=pointer_events.front()->get();
@@ -992,6 +997,7 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 
 		pointer_events.pop_front();
 	}
+	__android_log_print(ANDROID_LOG_INFO,"godot","5");
 
 	while (key_events.size()) {
 
@@ -1000,17 +1006,21 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 
 		key_events.pop_front();
 	};
+	__android_log_print(ANDROID_LOG_INFO,"godot","6");
 
 	if (quit_request) {
 
 		os_android->main_loop_request_quit();
 		quit_request=false;
 	}
+	__android_log_print(ANDROID_LOG_INFO,"godot","7");
 
 
 	input_mutex->unlock();
+	__android_log_print(ANDROID_LOG_INFO,"godot","7.5");
 
-	os_android->process_accelerometer(accelerometer);
+	//os_android->process_accelerometer(accelerometer);
+	__android_log_print(ANDROID_LOG_INFO,"godot","8");
 
 	if (os_android->main_loop_iterate()==true) {
 
@@ -1020,8 +1030,10 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 		__android_log_print(ANDROID_LOG_INFO,"godot","**FINISH REQUEST!!! - %p-%i\n",env,Thread::get_caller_ID());
 
 	}
+	__android_log_print(ANDROID_LOG_INFO,"godot","9");
 
 	suspend_mutex->unlock();
+	__android_log_print(ANDROID_LOG_INFO,"godot","GodotLib.step() - done");
 
 }
 

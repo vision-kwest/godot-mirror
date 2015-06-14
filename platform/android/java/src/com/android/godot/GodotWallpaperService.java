@@ -10,11 +10,15 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.util.Log;
 
+import android.os.SystemClock;
 import android.provider.Settings.Secure;
 
 public class GodotWallpaperService extends GLWallpaperService {
 	static public GodotIO io;
 	//public GodotView mView;
+	//static public boolean mIsInitialized;
+	static public int mNumContext = 0;
+	static public int step = 0;
 
 	private String[] command_line;
 	
@@ -22,16 +26,39 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 	private SensorManager mSensorManager;
 	private Sensor mAccelerometer;
+	//private MyEngine mEngine;
 
 	public GodotWallpaperService() {
 		super();
 		Log.d("Godot", "GodotWallpaperService()");
+		//GodotLib.mIsInitialized = false;
+		//mEngine = new MyEngine();
+	}
+	
+	
+	public void init(){
+		if (!GodotLib.mIsInitialized){
+			command_line = new String[0];
+			io = new GodotIO(this);
+			io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+			//GodotLib.io=GodotWallpaperService.this.io;
+			GodotLib.initializeWallpaper(this, !io.needsReloadHooks(), command_line);
+			Log.d("Godot", "GodotLib.initializeWallpaper()");
+			GodotLib.mIsInitialized = true;
+		}
 	}
 
 	public Engine onCreateEngine() {
-		Log.d("Godot", "GodotWallpaperService.onCreateEngine()");
+		//Log.d("Godot", "GodotWallpaperService.onCreateEngine()");
+		
+		/*if (mIsInitialized){
+			GodotLib.quit();
+			mIsInitialized = false;
+		}*/
+		
 		MyEngine engine = new MyEngine();
 		return engine;
+		//return mEngine;
 	}
 
 	public void onVideoInit(boolean use_gl2) {
@@ -40,22 +67,61 @@ public class GodotWallpaperService extends GLWallpaperService {
 		//setContentView(mView);
 	}
 
+	public void onDestroy(){
+		if (GodotLib.mIsInitialized){
+			GodotLib.quit();
+			Log.d("Godot", "GodotLib.quit()");
+			//GodotLib.mIsInitialized = false;
+			super.onDestroy();
+			//Log.d("Godot", "GodotLib.step() - QUIT!");
+			//GodotLib.step(); // process the quit request
+		}
+	}
+	
+	public void forceQuit() {
+		System.exit(0);
+	}
 	
 	class MyEngine extends GLEngine implements SharedPreferences.OnSharedPreferenceChangeListener, SensorEventListener {
 		GodotRenderer mRenderer;
 
 		public MyEngine() {
 			super();
-			Log.d("Godot", "GodotWallpaperService.MyEngine.MyEngine()");
+			//Log.d("Godot", "GodotWallpaperService.MyEngine.MyEngine()");
 			// handle prefs, other initialization
 			mRenderer = new GodotRenderer();	
 			setEGLContextClientVersion(2);
 			setRenderer(mRenderer);
 			setRenderMode(RENDERMODE_CONTINUOUSLY);
+			
+
 		}
 
+		public void onOffsetsChanged(float xOffset, float yOffset, float xOffsetStep, float yOffsetStep, int xPixelOffset, int yPixelOffset){
+			super.onOffsetsChanged(xOffset,      yOffset,
+					               xOffsetStep,  yOffsetStep,
+					               xPixelOffset, yPixelOffset);
+			
+			Log.d("Godot", "xOffset: "+xOffset+" yOffset: "+yOffset);
+			Log.d("Godot", "xOffsetStep: "+xOffsetStep+" yOffsetStep: "+yOffsetStep);
+			Log.d("Godot", "xPixelOffset: "+xPixelOffset+" yPixelOffset: "+yPixelOffset);
+			
+			//long downTime = SystemClock.uptimeMillis();
+			//long eventTime = SystemClock.uptimeMillis()
+			//int action = MotionEvent.ACTION_MOVE
+			//MotionEvent event = MotionEvent.obtain(downTime, eventTime, action, x, y, pressure, size, metaState, xPrecision, yPrecision, deviceId, edgeFlags);
+			//io.gotTouchEvent(event);
+			io.gotOffsetEvent(xOffset);
+			
+		}
+		
 		public void onDestroy() {
-			Log.d("Godot", "GodotWallpaperService.MyEngine.onDestroy()");
+			//Log.d("Godot", "GodotWallpaperService.MyEngine.onDestroy()");
+			/*
+			GodotLib.quit();
+			mIsInitialized = false;
+			Log.d("Godot", "GodotLib.quit()");
+			*/
 			// Unregister this as listener
 			mSensorManager.unregisterListener(this);
 
@@ -70,9 +136,9 @@ public class GodotWallpaperService extends GLWallpaperService {
 		boolean is_paused = false;
 		@Override
 		public void onTouchEvent(MotionEvent event) {
-			Log.d("Godot", "GodotWallpaperService.MyEngine.onTouchEvent()");
+			//Log.d("Godot", "GodotWallpaperService.MyEngine.onTouchEvent()");
 			super.onTouchEvent(event);		
-			io.gotTouchEvent(event);
+			//io.gotTouchEvent(event);
 			
 			/*
 			boolean is_button_down = MotionEvent.ACTION_DOWN == event.getActionMasked();
@@ -85,19 +151,22 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 		@Override
 		public void onCreate(SurfaceHolder surfaceHolder) {
-			Log.d("Godot", "GodotWallpaperService.MyEngine.onCreate()");
+			//Log.d("Godot", "GodotWallpaperService.MyEngine.onCreate()");
 			super.onCreate(surfaceHolder);
 
 			// Add touch events
 			setTouchEventsEnabled(true);
 
+
 			
+			GodotWallpaperService.this.init(); // Need a surface to init
+			/*
 			command_line = new String[0];
 			GodotWallpaperService.this.io = new GodotIO(GodotWallpaperService.this);
 			GodotWallpaperService.this.io.unique_id = Secure.getString(GodotWallpaperService.this.getContentResolver(), Secure.ANDROID_ID);
 			//GodotLib.io=GodotWallpaperService.this.io;
 			GodotLib.initializeWallpaper(GodotWallpaperService.this, GodotWallpaperService.this.io.needsReloadHooks(), command_line);
-			
+			*/
 			
 			// Get sensormanager and register as listener.
 			mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -134,15 +203,26 @@ public class GodotWallpaperService extends GLWallpaperService {
 		}
 		
 		public void togglePause(boolean visible){
-			if (visible){
-				mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-				GodotLib.focusin();
-				Log.d("Godot", "GodotWallpaperService.MyEngine.togglePause( IN_FOCUS )");
-			}else{
-				mSensorManager.unregisterListener(this);
-				GodotLib.focusout();
-				Log.d("Godot", "GodotWallpaperService.MyEngine.togglePause( OUT_FOCUS )");
-			}			
+			//if (GodotWallpaperService.mIsInitialized){
+			if (GodotLib.mIsInitialized){
+				if (visible){
+					mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+					GodotLib.focusin();
+					// Add offset events
+					Log.d("Godot", ">>>>>>>>>> setOffsetNotificationsEnabled(true)");
+					//setOffsetNotificationsEnabled(true);
+					Log.d("Godot", "GodotLib.focusin() - IN");
+				}else{
+					mSensorManager.unregisterListener(this);
+					GodotLib.focusout();
+					Log.d("Godot", "GodotLib.focusout() - OUT");
+					/*if (GodotWallpaperService.step > 300){
+						GodotLib.quit();
+						mIsInitialized = false;
+						Log.d("Godot", "GodotLib.quit()");
+					}*/
+				}
+			}
 		}
 	}
 }

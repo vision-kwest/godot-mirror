@@ -72,6 +72,7 @@ typedef void (*VideoStopFunc)();
 
 class OS_Android : public OS_Unix {
 public:
+	Rasterizer *rasterizer;
 
 	struct TouchPos {
 		int id;
@@ -91,7 +92,7 @@ private:
 	bool use_reload_hooks;
 	bool use_apk_expansion;
 
-	Rasterizer *rasterizer;
+	//Rasterizer *rasterizer;
 	VisualServer *visual_server;
 	AudioServerSW *audio_server;
 	SampleManagerMallocSW *sample_manager;
@@ -194,6 +195,7 @@ public:
 	void set_display_size(Size2 p_size);
 
 	void reload_gfx();
+	void reload_gfx2();
 
 	void set_need_reload_hooks(bool p_needs_them);
 	virtual void set_screen_orientation(ScreenOrientation p_orientation);

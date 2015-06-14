@@ -637,6 +637,42 @@ public class GodotIO {
 		return  unique_id;
 	}
 	
+	
+
+	public boolean isAnimating = false;
+	public boolean gotOffsetEvent(float  xOffset) {
+		float x_max = 767.0f;
+		int x = Math.round(xOffset*x_max);
+		int evcount = 1;
+		int[] arr= {0, x, 0};
+		
+		if (isAnimating == false){
+			Log.d("Godot", "evcount: START");
+		  // Button down
+		  GodotLib.touch(0,0,evcount,arr);
+		  isAnimating = true;
+		  // Move!
+		  GodotLib.touch(1,0,evcount,arr);
+		  Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
+		}else if(xOffset == 0.0f || xOffset == 0.25f || xOffset == 0.5f || xOffset == 1.0f){
+			// Move!
+			  GodotLib.touch(1,0,evcount,arr);
+			  Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
+			  // Button up
+			  GodotLib.touch(2,0,evcount,arr);
+				Log.d("Godot", "evcount: STOP");
+
+		}else{
+			// Move!
+		    GodotLib.touch(1,0,evcount,arr);	
+		    Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
+		    isAnimating = false;
+		}
+
+		return true;
+	}
+
+	
 	public boolean gotTouchEvent(MotionEvent event) {
 
 		//super.onTouchEvent(event);
@@ -662,6 +698,8 @@ public class GodotIO {
 			} break;
 			case MotionEvent.ACTION_MOVE: {
 				GodotLib.touch(1,0,evcount,arr);
+				//Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
+				
 				//for(int i=0;i<event.getPointerCount();i++) {
 				//	System.out.printf("%d - moved to: %f,%f\n",i, event.getX(i),event.getY(i));
 				//}

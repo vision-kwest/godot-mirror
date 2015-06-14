@@ -626,6 +626,15 @@ void OS_Android::reload_gfx() {
 		rasterizer->reload_vram();
 }
 
+void OS_Android::reload_gfx2() {
+
+	if (gfx_init_func)
+		gfx_init_func(gfx_init_ud,use_gl2);
+	if (rasterizer)
+		rasterizer->reload_vram2();
+}
+
+
 Error OS_Android::shell_open(String p_uri) {
 
 	if (open_uri_func)

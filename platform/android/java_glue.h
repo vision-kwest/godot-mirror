@@ -40,6 +40,7 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initializeWallpaper(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdline);
     JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_resize(JNIEnv * env, jobject obj,  jint width, jint height, jboolean reload);
     JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_newcontext(JNIEnv * env, jobject obj);
+    JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_newcontext2(JNIEnv * env, jobject obj);
     JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobject obj);
     JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_quit(JNIEnv * env, jobject obj);
     JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_touch(JNIEnv * env, jobject obj, jint ev,jint pointer, jint count, jintArray positions);

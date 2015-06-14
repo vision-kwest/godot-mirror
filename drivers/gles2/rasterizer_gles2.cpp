@@ -1754,6 +1754,23 @@ RID RasterizerGLES2::mesh_create() {
 	return mesh_owner.make_rid( memnew( Mesh ) );
 }
 
+void RasterizerGLES2::mesh_check(){
+	bool enable = false;
+	if (enable){
+		print_line("**MESH CHECK**");
+		int num_mesh = 0;
+		List<RID> meshes;
+		mesh_owner.get_owned_list(&meshes);
+		for(List<RID>::Element *E=meshes.front();E;E=E->next()) {
+			Mesh *mesh = mesh_owner.get(E->get());
+			print_line("  Mesh: "+itos(num_mesh++));
+			for(int i=0;i<mesh->surfaces.size();i++) {
+				print_line("    surface: "+itos(i)+" size: "+itos(mesh->surfaces[i]->data.size()));
+				//ERR_FAIL_COND(mesh->surfaces[i]->data.size()!=VS::ARRAY_MAX);
+			}		
+		}
+	}
+}
 
 
 void RasterizerGLES2::mesh_add_surface(RID p_mesh,VS::PrimitiveType p_primitive,const Array& p_arrays,const Array& p_blend_shapes,bool p_alpha_sort) {
@@ -9913,11 +9930,11 @@ void RasterizerGLES2::reload_vram() {
 		render_target_set_size(E->get(),w,h);
 	}
 
-
+	mesh_check();
+	
 	List<RID> meshes;
 	mesh_owner.get_owned_list(&meshes);
 	for(List<RID>::Element *E=meshes.front();E;E=E->next()) {
-
 		Mesh *mesh = mesh_owner.get(E->get());
 		Vector<Surface*> surfaces =mesh->surfaces;
 		mesh->surfaces.clear();
@@ -10034,6 +10051,274 @@ void RasterizerGLES2::reload_vram() {
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void RasterizerGLES2::reload_vram2() {
+
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glFrontFace(GL_CW);
+
+
+
+	//do a single initial clear
+	glClearColor(0,0,0,1);
+	//glClearDepth(1.0);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+
+	glGenTextures(1, &white_tex);
+	unsigned char whitetexdata[8*8*3];
+	for(int i=0;i<8*8*3;i++) {
+		whitetexdata[i]=255;
+	}
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D,white_tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 8, 8, 0, GL_RGB, GL_UNSIGNED_BYTE,whitetexdata);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D,0);
+
+
+
+	List<RID> textures;
+	texture_owner.get_owned_list(&textures);
+	keep_copies=false;
+	for(List<RID>::Element *E=textures.front();E;E=E->next()) {
+
+		RID tid = E->get();
+		Texture *t=texture_owner.get(tid);
+		ERR_CONTINUE(!t);
+		t->tex_id=0;
+		t->data_size=0;
+		glGenTextures(1, &t->tex_id);
+		t->active=false;
+		if (t->render_target)
+			continue;
+		texture_allocate(tid,t->width,t->height,t->format,t->flags);
+		bool had_image=false;
+		for(int i=0;i<6;i++) {
+			if (!t->image[i].empty()) {
+				texture_set_data(tid,t->image[i],VS::CubeMapSide(i));
+				had_image=true;
+			}
+		}
+
+		if (!had_image && t->reloader) {
+			Object *rl = ObjectDB::get_instance(t->reloader);
+			if (rl)
+				rl->call(t->reloader_func,tid);
+		}
+	}
+	keep_copies=true;
+
+	List<RID> render_targets;
+	render_target_owner.get_owned_list(&render_targets);
+	for(List<RID>::Element *E=render_targets.front();E;E=E->next()) {
+		RenderTarget *rt = render_target_owner.get(E->get());
+
+		int w = rt->width;
+		int h = rt->height;
+		rt->width=0;
+		rt->height=0;
+		render_target_set_size(E->get(),w,h);
+	}
+
+
+	//print_line("MESHES:,"+itos(6)+"...");
+    mesh_check();
+	
+	List<RID> meshes;
+	mesh_owner.get_owned_list(&meshes);
+	for(List<RID>::Element *E=meshes.front();E;E=E->next()) {
+		Mesh *mesh = mesh_owner.get(E->get());
+		Vector<Surface*> surfaces =mesh->surfaces;
+		mesh->surfaces.clear();
+		for(int i=0;i<surfaces.size();i++) {
+			mesh_add_surface(E->get(),surfaces[i]->primitive,surfaces[i]->data,surfaces[i]->morph_data,surfaces[i]->alpha_sort);
+			mesh_surface_set_material(E->get(),i,surfaces[i]->material);
+
+			if (surfaces[i]->array_local != 0) {
+				memfree(surfaces[i]->array_local);
+			};
+			if (surfaces[i]->index_array_local != 0) {
+				memfree(surfaces[i]->index_array_local);
+			};
+
+			memdelete( surfaces[i] );
+		}
+
+	}
+
+	List<RID> skeletons;
+	skeleton_owner.get_owned_list(&skeletons);
+	for(List<RID>::Element *E=skeletons.front();E;E=E->next()) {
+
+		Skeleton *sk = skeleton_owner.get(E->get());
+		if (!sk->tex_id)
+			continue; //does not use hw transform, leave alone
+
+		Vector<Skeleton::Bone> bones = sk->bones;
+		sk->bones.clear();
+		sk->tex_id=0;
+		sk->pixel_size=1.0;
+		skeleton_resize(E->get(),bones.size());
+		sk->bones=bones;
+	}
+
+	List<RID> multimeshes;
+	multimesh_owner.get_owned_list(&multimeshes);
+	for(List<RID>::Element *E=multimeshes.front();E;E=E->next()) {
+
+		MultiMesh *mm = multimesh_owner.get(E->get());
+		if (!mm->tex_id)
+			continue; //does not use hw transform, leave alone
+
+		Vector<MultiMesh::Element> elements = mm->elements;
+		mm->elements.clear();
+
+		mm->tw=1;
+		mm->th=1;
+		mm->tex_id=0;
+		mm->last_pass=0;
+		mm->visible = -1;
+
+		multimesh_set_instance_count(E->get(),elements.size());
+		mm->elements=elements;
+
+	}
+
+
+
+
+	if (framebuffer.fbo!=0) {
+
+		framebuffer.fbo=0;
+		framebuffer.depth=0;
+		framebuffer.color=0;
+
+		for(int i=0;i<3;i++) {
+			framebuffer.blur[i].fbo=0;
+			framebuffer.blur[i].color=0;
+		}
+
+		framebuffer.luminance.clear();
+
+	}
+
+	for(int i=0;i<near_shadow_buffers.size();i++) {
+		near_shadow_buffers[i].init(near_shadow_buffers[i].size,!use_rgba_shadowmaps);
+	}
+
+	blur_shadow_buffer.init(near_shadow_buffers[0].size,!use_rgba_shadowmaps);
+
+
+
+	canvas_shader.clear_caches();
+	material_shader.clear_caches();
+	blur_shader.clear_caches();
+	copy_shader.clear_caches();
+
+
+	List<RID> shaders;
+	shader_owner.get_owned_list(&shaders);
+	for(List<RID>::Element *E=shaders.front();E;E=E->next()) {
+
+		Shader *s = shader_owner.get(E->get());
+		s->custom_code_id=0;
+		s->version=1;
+		s->valid=false;
+		shader_set_mode(E->get(),s->mode);
+
+	}
+
+	List<RID> materials;
+	material_owner.get_owned_list(&materials);
+	for(List<RID>::Element *E=materials.front();E;E=E->next()) {
+
+
+		Material *m = material_owner.get(E->get());
+		RID shader = m->shader;
+		m->shader_version=0;
+		material_set_shader(E->get(),shader);
+
+	}
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void RasterizerGLES2::set_use_framebuffers(bool p_use) {
 

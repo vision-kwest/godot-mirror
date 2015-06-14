@@ -74,24 +74,31 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 		super();
 		frame_count = 0;
 		firsttime = true;
-		Log.d("Godot", "GodotRenderer() - CONSTRUCTOR");
+		//Log.d("Godot", "GodotRenderer() - CONSTRUCTOR");
 	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		if (frame_count % 100 == 0 || frame_count == 0){
-			Log.d("Godot", "GodotRenderer.onDrawFrame("+frame_count+")");
+		if (GodotLib.mIsInitialized){
+			GodotLib.step();
+			if (frame_count % 100 == 0 || frame_count == 0){
+				Log.d("Godot", "GodotLib.step("+frame_count+")");
+			}
+			frame_count++;
+			GodotWallpaperService.step++;
 		}
-		GodotLib.step();
 		for(int i=0;i<Godot.singleton_count;i++) {
 			Godot.singletons[i].onGLDrawFrame(gl);
 		}
-		frame_count++;
+		
 	}
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
-		Log.d("Godot", "GodotRenderer.onSurfaceChanged()");
-		GodotLib.resize(width, height,!firsttime);
+		//Log.d("Godot", "GodotRenderer.onSurfaceChanged()");
+		if (GodotLib.mIsInitialized){
+			GodotLib.resize(width, height,!firsttime);
+			Log.d("Godot", "GodotLib.resize()");
+		}
 		firsttime=false;
 		for(int i=0;i<Godot.singleton_count;i++) {
 			Godot.singletons[i].onGLSurfaceChanged(gl, width, height);
@@ -99,11 +106,20 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 	}
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		Log.d("Godot", "GodotRenderer.onSurfaceCreated()");
-		if (firsttime){
+		GodotWallpaperService.mNumContext++;
+		Log.d("Godot", "GodotRenderer.onSurfaceCreated("+GodotWallpaperService.mNumContext+")");
+		//if (GodotWallpaperService.mNumContext == 2){
+		if (GodotLib.mIsInitialized){			
+			GodotLib.newcontext();
+			Log.d("Godot", "GodotLib.newcontext() - NEW CONTEXT");
+		}
+		/*if (GodotWallpaperService.mNumContext == 1){
 			Log.d("Godot", "GodotLib.newcontext() - NEW CONTEXT");
 			GodotLib.newcontext();
-		}
+		}else{
+			GodotLib.newcontext2();
+		}*/
+		
 	}
 }
 

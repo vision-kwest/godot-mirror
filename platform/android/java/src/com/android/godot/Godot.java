@@ -244,8 +244,8 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 
 	public void onVideoInit(boolean use_gl2) {
 
-		mView = new GodotView(getApplication(),io,use_gl2);
-		setContentView(mView);
+		//mView = new GodotView(getApplication(),io,use_gl2);
+		//setContentView(mView);
 
 		/*
 		layout = new FrameLayout(this);
@@ -387,9 +387,9 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 
 		super.onCreate(icicle);
 		_self = this;
-//		Window window = getWindow();
-//		window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-//			| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		Window window = getWindow();
+		window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+			| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 
 		//check for apk expansion API

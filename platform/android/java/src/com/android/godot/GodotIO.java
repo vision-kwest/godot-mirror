@@ -687,7 +687,8 @@ public class GodotIO {
 		  // Move!
 		  GodotLib.touch(1,0,evcount,arr);
 		  Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
-		}else if(xOffset == 0.0f || xOffset == 0.25f || xOffset == 0.5f || xOffset == 1.0f){
+		//}else if(xOffset == 0.0f || xOffset == 0.25f || xOffset == 0.5f || xOffset == 0.75f || xOffset == 1.0f){
+		}else if(x == 0 || x == 192 || x == 384 || x == 576 || x == 767){
 			// Move!
 			  GodotLib.touch(1,0,evcount,arr);
 			  Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );

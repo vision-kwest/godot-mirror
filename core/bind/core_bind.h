@@ -108,6 +108,26 @@ public:
 	bool is_video_mode_resizable(int p_screen=0) const;
 	Array get_fullscreen_mode_list(int p_screen=0) const;
 
+
+	virtual int get_screen_count() const;
+	virtual int get_current_screen() const;
+	virtual void set_current_screen(int p_screen);
+	virtual Point2 get_screen_position(int p_screen=0) const;
+	virtual Size2 get_screen_size(int p_screen=0) const;
+	virtual Point2 get_window_position() const;
+	virtual void set_window_position(const Point2& p_position);
+	virtual Size2 get_window_size() const;
+	virtual void set_window_size(const Size2& p_size);
+	virtual void set_window_fullscreen(bool p_enabled);
+	virtual bool is_window_fullscreen() const;
+	virtual void set_window_resizable(bool p_enabled);
+	virtual bool is_window_resizable() const;
+	virtual void set_window_minimized(bool p_enabled);
+	virtual bool is_window_minimized() const;
+	virtual void set_window_maximized(bool p_enabled);
+	virtual bool is_window_maximized() const;
+
+
 	Error native_video_play(String p_path, float p_volume, String p_audio_track, String p_subtitle_track);
 	bool native_video_is_playing();
 	void native_video_pause();
@@ -158,6 +178,11 @@ public:
 
 	String get_unique_ID() const;
 
+	String get_scancode_string(uint32_t p_code) const;
+	bool is_scancode_unicode(uint32_t p_unicode) const;
+	int find_scancode_from_string(const String& p_code) const;
+
+
 	/*
 	struct Date {
 
@@ -179,8 +204,9 @@ public:
 	void set_use_file_access_save_and_swap(bool p_enable);
 
 	void set_icon(const Image& p_icon);
-	Dictionary get_date() const;
-	Dictionary get_time() const;
+	Dictionary get_date(bool utc) const;
+	Dictionary get_time(bool utc) const;
+	Dictionary get_time_zone_info() const;
 	uint64_t get_unix_time() const;
 
 	int get_static_memory_usage() const;
@@ -190,6 +216,7 @@ public:
 	void delay_usec(uint32_t p_usec) const;
 	void delay_msec(uint32_t p_msec) const;
 	uint32_t get_ticks_msec() const;
+	uint32_t get_splash_tick_msec() const;
 
 	bool can_use_threads() const;
 
@@ -220,6 +247,8 @@ public:
 	void set_time_scale(float p_scale);
 	float get_time_scale();
 
+	bool is_ok_left_and_cancel_right() const;
+
 	static _OS *get_singleton() { return singleton; }
 
 	_OS();
@@ -248,6 +277,8 @@ public:
 	Vector3 get_closest_point_to_segment(const Vector3& p_point, const Vector3& p_a,const Vector3& p_b);
 	Variant ray_intersects_triangle( const Vector3& p_from, const Vector3& p_dir, const Vector3& p_v0,const Vector3& p_v1,const Vector3& p_v2);
 	Variant segment_intersects_triangle( const Vector3& p_from, const Vector3& p_to, const Vector3& p_v0,const Vector3& p_v1,const Vector3& p_v2);
+	bool point_is_inside_triangle(const Vector2& s, const Vector2& a, const Vector2& b, const Vector2& c) const;
+
 	DVector<Vector3> segment_intersects_sphere( const Vector3& p_from, const Vector3& p_to, const Vector3& p_sphere_pos,real_t p_sphere_radius);
 	DVector<Vector3> segment_intersects_cylinder( const Vector3& p_from, const Vector3& p_to, float p_height,float p_radius);
 	DVector<Vector3> segment_intersects_convex(const Vector3& p_from, const Vector3& p_to,const Vector<Plane>& p_planes);

@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -339,7 +339,7 @@ Error Globals::setup(const String& p_path,const String & p_main_pack) {
 			//try to load settings in ascending through dirs shape!
 
 			//tries to open pack, but only first time
-			if (first_time && _load_resource_pack(current_dir+"/data.pck")) {
+			if (first_time && (_load_resource_pack(current_dir+"/data.pck") || _load_resource_pack(current_dir+"/data.pcz") )) {
 				if (_load_settings("res://engine.cfg")==OK || _load_settings_binary("res://engine.cfb")==OK) {
 
 					_load_settings("res://override.cfg");
@@ -1381,7 +1381,7 @@ Globals::Globals() {
 
 	set("application/name","" );
 	set("application/main_scene","");
-	custom_prop_info["application/main_scene"]=PropertyInfo(Variant::STRING,"application/main_scene",PROPERTY_HINT_FILE,"xml,res,scn,xscn");
+	custom_prop_info["application/main_scene"]=PropertyInfo(Variant::STRING,"application/main_scene",PROPERTY_HINT_FILE,"scn,res,xscn,xml");
 	set("application/disable_stdout",false);
 	set("application/use_shared_user_dir",true);
 
@@ -1395,6 +1395,13 @@ Globals::Globals() {
 	joyb.joy_button.button_index=JOY_BUTTON_0;
 	va.push_back(joyb);
 	set("input/ui_accept",va);
+
+	va=Array();
+	key.key.scancode=KEY_SPACE;
+	va.push_back(key);
+	joyb.joy_button.button_index=JOY_BUTTON_3;
+	va.push_back(joyb);
+	set("input/ui_select",va);
 
 	va=Array();
 	key.key.scancode=KEY_ESCAPE;
@@ -1460,6 +1467,7 @@ Globals::Globals() {
 	custom_prop_info["display/orientation"]=PropertyInfo(Variant::STRING,"display/orientation",PROPERTY_HINT_ENUM,"landscape,portrait,reverse_landscape,reverse_portrait,sensor_landscape,sensor_portrait,sensor");
 	custom_prop_info["render/mipmap_policy"]=PropertyInfo(Variant::INT,"render/mipmap_policy",PROPERTY_HINT_ENUM,"Allow,Allow For Po2,Disallow");
 	custom_prop_info["render/thread_model"]=PropertyInfo(Variant::INT,"render/thread_model",PROPERTY_HINT_ENUM,"Single-Unsafe,Single-Safe,Multi-Threaded");
+	custom_prop_info["physics_2d/thread_model"]=PropertyInfo(Variant::INT,"physics_2d/thread_model",PROPERTY_HINT_ENUM,"Single-Unsafe,Single-Safe,Multi-Threaded");
 	set("display/emulate_touchscreen",false);
 
 	using_datapack=false;

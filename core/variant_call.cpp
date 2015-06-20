@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -285,6 +285,36 @@ static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Var
 	VCALL_LOCALMEM1R(String,pad_decimals);
 	VCALL_LOCALMEM1R(String,pad_zeros);
 
+	static void _call_String_to_ascii(Variant& r_ret,Variant& p_self,const Variant** p_args) {
+
+		String *s = reinterpret_cast<String*>(p_self._data._mem);
+		CharString charstr = s->ascii();
+
+		ByteArray retval;
+		size_t len = charstr.length();
+		retval.resize(len);
+		ByteArray::Write w = retval.write();
+		copymem(w.ptr(), charstr.ptr(), len);
+		w = DVector<uint8_t>::Write();
+
+		r_ret = retval;
+	}
+
+	static void _call_String_to_utf8(Variant& r_ret,Variant& p_self,const Variant** p_args) {
+
+		String *s = reinterpret_cast<String*>(p_self._data._mem);
+		CharString charstr = s->utf8();
+
+		ByteArray retval;
+		size_t len = charstr.length();
+		retval.resize(len);
+		ByteArray::Write w = retval.write();
+		copymem(w.ptr(), charstr.ptr(), len);
+		w = DVector<uint8_t>::Write();
+
+		r_ret = retval;
+	}
+
 
 	VCALL_LOCALMEM0R(Vector2,normalized);
 	VCALL_LOCALMEM0R(Vector2,length);
@@ -426,6 +456,7 @@ static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Var
 	VCALL_LOCALMEM0(Array,sort);
 	VCALL_LOCALMEM2(Array,sort_custom);
 	VCALL_LOCALMEM0(Array,invert);
+	VCALL_LOCALMEM0R(Array,is_shared);
 
 	static void _call_ByteArray_get_string_from_ascii(Variant& r_ret,Variant& p_self,const Variant** p_args) {
 
@@ -511,7 +542,7 @@ static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Var
 	VCALL_LOCALMEM1(ColorArray,append_array);
 
 #define VCALL_PTR0(m_type,m_method)\
-static void _call_##m_type##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(); }
+static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(); }
 #define VCALL_PTR0R(m_type,m_method)\
 static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { r_ret=reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(); }
 #define VCALL_PTR1(m_type,m_method)\
@@ -519,7 +550,7 @@ static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Var
 #define VCALL_PTR1R(m_type,m_method)\
 static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { r_ret=reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(*p_args[0]); }
 #define VCALL_PTR2(m_type,m_method)\
-static void _call_##m_type##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(*p_args[0],*p_args[1]); }
+static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(*p_args[0],*p_args[1]); }
 #define VCALL_PTR2R(m_type,m_method)\
 static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { r_ret=reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(*p_args[0],*p_args[1]); }
 #define VCALL_PTR3(m_type,m_method)\
@@ -531,7 +562,7 @@ static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Var
 #define VCALL_PTR4R(m_type,m_method)\
 static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { r_ret=reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(*p_args[0],*p_args[1],*p_args[2],*p_args[3]); }
 #define VCALL_PTR5(m_type,m_method)\
-static void _call_##m_type##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(*p_args[0],*p_args[1],*p_args[2],*p_args[3],*p_args[4]); }
+static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(*p_args[0],*p_args[1],*p_args[2],*p_args[3],*p_args[4]); }
 #define VCALL_PTR5R(m_type,m_method)\
 static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Variant** p_args) { r_ret=reinterpret_cast<m_type*>(p_self._data._ptr)->m_method(*p_args[0],*p_args[1],*p_args[2],*p_args[3],*p_args[4]); }
 
@@ -685,7 +716,7 @@ static void _call_##m_type##_##m_method(Variant& r_ret,Variant& p_self,const Var
 	VCALL_PTR0R( InputEvent, is_pressed );
 	VCALL_PTR1R( InputEvent, is_action );
 	VCALL_PTR0R( InputEvent, is_echo );
-	//VCALL_PTR2( InputEvent, set_as_action );
+    VCALL_PTR2( InputEvent, set_as_action );
 
 	struct ConstructData {
 
@@ -1031,7 +1062,7 @@ Variant Variant::construct(const Variant::Type p_type,const Variant** p_args,int
 			case STRING_ARRAY: return (StringArray(*p_args[0]));
 			case VECTOR2_ARRAY: return (Vector2Array(*p_args[0])); 	// 25
 			case VECTOR3_ARRAY: return (Vector3Array(*p_args[0])); 	// 25
-			case COLOR_ARRAY: return (Color(*p_args[0]));
+			case COLOR_ARRAY: return (ColorArray(*p_args[0]));
 			default: return Variant();
 		}
 	}
@@ -1111,6 +1142,7 @@ void Variant::get_constructor_list(Variant::Type p_type, List<MethodInfo> *p_lis
 		const _VariantCall::ConstructData &cd = E->get();
 		MethodInfo mi;
 		mi.name=Variant::get_type_name(p_type);
+		mi.return_val.type=p_type;
 		for(int i=0;i<cd.arg_count;i++) {
 
 			PropertyInfo pi;
@@ -1133,6 +1165,7 @@ void Variant::get_constructor_list(Variant::Type p_type, List<MethodInfo> *p_lis
 		pi.name="from";
 		pi.type=Variant::Type(i);
 		mi.arguments.push_back(pi);
+		mi.return_val.type=p_type;
 		p_list->push_back(mi);
 	}
 }
@@ -1212,9 +1245,10 @@ _VariantCall::addfunc(Variant::m_vtype,Variant::m_ret,_SCS(#m_method),VCALL(m_cl
 	ADDFUNC0(STRING,STRING,String,capitalize,varray());
 	ADDFUNC2(STRING,STRING_ARRAY,String,split,STRING,"divisor",BOOL,"allow_empty",varray(true));
 	ADDFUNC2(STRING,REAL_ARRAY,String,split_floats,STRING,"divisor",BOOL,"allow_empty",varray(true));
-	ADDFUNC0(STRING,STRING,String,to_upper,varray());
 
+	ADDFUNC0(STRING,STRING,String,to_upper,varray());
 	ADDFUNC0(STRING,STRING,String,to_lower,varray());
+
 	ADDFUNC1(STRING,STRING,String,left,INT,"pos",varray());
 	ADDFUNC1(STRING,STRING,String,right,INT,"pos",varray());
 	ADDFUNC0(STRING,STRING,String,strip_edges,varray());
@@ -1246,6 +1280,10 @@ _VariantCall::addfunc(Variant::m_vtype,Variant::m_ret,_SCS(#m_method),VCALL(m_cl
 	ADDFUNC1(STRING,STRING,String,pad_decimals,INT,"digits",varray());
 	ADDFUNC1(STRING,STRING,String,pad_zeros,INT,"digits",varray());
 
+	ADDFUNC0(STRING,STRING,String,to_ascii,varray());
+	ADDFUNC0(STRING,STRING,String,to_utf8,varray());
+
+
 	ADDFUNC0(VECTOR2,VECTOR2,Vector2,normalized,varray());
 	ADDFUNC0(VECTOR2,REAL,Vector2,length,varray());
 	ADDFUNC0(VECTOR2,REAL,Vector2,atan2,varray());
@@ -1263,8 +1301,8 @@ _VariantCall::addfunc(Variant::m_vtype,Variant::m_ret,_SCS(#m_method),VCALL(m_cl
 	ADDFUNC1(VECTOR2,VECTOR2,Vector2,snapped,VECTOR2,"by",varray());
 	ADDFUNC0(VECTOR2,REAL,Vector2,get_aspect,varray());
 	ADDFUNC1(VECTOR2,REAL,Vector2,dot,VECTOR2,"with",varray());
-	ADDFUNC1(VECTOR2,REAL,Vector2,slide,VECTOR2,"vec",varray());
-	ADDFUNC1(VECTOR2,REAL,Vector2,reflect,VECTOR2,"vec",varray());
+	ADDFUNC1(VECTOR2,VECTOR2,Vector2,slide,VECTOR2,"vec",varray());
+	ADDFUNC1(VECTOR2,VECTOR2,Vector2,reflect,VECTOR2,"vec",varray());
 	//ADDFUNC1(VECTOR2,REAL,Vector2,cross,VECTOR2,"with",varray());
 
 	ADDFUNC0(RECT2,REAL,Rect2,get_area,varray());
@@ -1378,6 +1416,7 @@ _VariantCall::addfunc(Variant::m_vtype,Variant::m_ret,_SCS(#m_method),VCALL(m_cl
 	ADDFUNC0(ARRAY,NIL,Array,sort,varray());
 	ADDFUNC2(ARRAY,NIL,Array,sort_custom,OBJECT,"obj",STRING,"func",varray());
 	ADDFUNC0(ARRAY,NIL,Array,invert,varray());
+	ADDFUNC0(ARRAY,BOOL,Array,is_shared,varray());
 
 	ADDFUNC0(RAW_ARRAY,INT,ByteArray,size,varray());
 	ADDFUNC2(RAW_ARRAY,NIL,ByteArray,set,INT,"idx",INT,"byte",varray());
@@ -1496,7 +1535,7 @@ _VariantCall::addfunc(Variant::m_vtype,Variant::m_ret,_SCS(#m_method),VCALL(m_cl
 	ADDFUNC0(INPUT_EVENT,BOOL,InputEvent,is_pressed,varray());
 	ADDFUNC1(INPUT_EVENT,BOOL,InputEvent,is_action,STRING,"action",varray());
 	ADDFUNC0(INPUT_EVENT,BOOL,InputEvent,is_echo,varray());
-	//ADDFUNC2(INPUT_EVENT,NIL,InputEvent,set_as_action,STRING,"action",BOOL,"pressed",varray());
+    ADDFUNC2(INPUT_EVENT,NIL,InputEvent,set_as_action,STRING,"action",BOOL,"pressed",varray());
 
 	/* REGISTER CONSTRUCTORS */
 

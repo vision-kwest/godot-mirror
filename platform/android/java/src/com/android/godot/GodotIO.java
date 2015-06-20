@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -272,6 +272,7 @@ public class GodotIO {
 
 		public String[] files;
 		public int current;
+		public String path;
 	}
 
 	public int last_dir_id=1;
@@ -282,6 +283,7 @@ public class GodotIO {
 
 		AssetDir ad = new AssetDir();
 		ad.current=0;
+		ad.path=path;
 
 		try {
 			ad.files = am.list(path);
@@ -291,11 +293,38 @@ public class GodotIO {
 			return -1;
 		}
 
+		//System.out.printf("Opened dir: %s\n",path);
 		++last_dir_id;
 		dirs.put(last_dir_id,ad);
 
 		return last_dir_id;
 
+	}
+
+	public boolean dir_is_dir(int id) {
+		if (!dirs.containsKey(id)) {
+			System.out.printf("dir_next: invalid dir id: %d\n",id);
+			return false;
+		}
+		AssetDir ad = dirs.get(id);
+		//System.out.printf("go next: %d,%d\n",ad.current,ad.files.length);
+		int idx = ad.current;
+		if (idx>0)
+			idx--;
+
+		if (idx>=ad.files.length)
+			return false;
+		String fname = ad.files[idx];
+
+		try {
+			if (ad.path.equals(""))
+				am.open(fname);
+			else
+				am.open(ad.path+"/"+fname);
+			return false;
+		} catch (Exception e) {
+			return true;
+		}
 	}
 
 	public String dir_next(int id) {
@@ -306,8 +335,12 @@ public class GodotIO {
 		}
 
 		AssetDir ad = dirs.get(id);
-		if (ad.current>=ad.files.length)
+		//System.out.printf("go next: %d,%d\n",ad.current,ad.files.length);
+
+		if (ad.current>=ad.files.length) {
+			ad.current++;
 			return "";
+		}
 		String r = ad.files[ad.current];
 		ad.current++;
 		return r;

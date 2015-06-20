@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -538,9 +538,12 @@ void GDTokenizerText::_advance() {
 				is_node_path=true;
 				
 			case '\'':
-				string_mode=STRING_SINGLE_QUOTE;
 			case '"': {
-
+	
+				if (GETCHAR(0)=='\'')
+					string_mode=STRING_SINGLE_QUOTE;
+																	
+																	
 				int i=1;
 				if (string_mode==STRING_DOUBLE_QUOTE && GETCHAR(i)=='"' && GETCHAR(i+1)=='"') {
 					i+=2;
@@ -1033,7 +1036,7 @@ void GDTokenizerText::advance(int p_amount) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define BYTECODE_VERSION 3
+#define BYTECODE_VERSION 4
 
 Error GDTokenizerBuffer::set_code_buffer(const Vector<uint8_t> & p_buffer) {
 

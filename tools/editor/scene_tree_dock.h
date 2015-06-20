@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -87,9 +87,10 @@ class SceneTreeDock : public VBoxContainer {
 	ConfirmationDialog *delete_dialog;
 
 	ReparentDialog *reparent_dialog;
-	FileDialog *file;
+	EditorFileDialog *file;
 	EditorSubScene *import_subscene_dialog;
 
+	bool first_enter;
 
 	void _create();
 	Node *scene_root;

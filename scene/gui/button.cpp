@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -97,6 +97,13 @@ void Button::_notification(int p_what) {
 			
 			} break;
 		}
+
+		if (has_focus()) {
+
+			Ref<StyleBox> style = get_stylebox("focus");
+			style->draw(ci,Rect2(Point2(),size));
+		}
+
 		Ref<StyleBox> style = get_stylebox("normal" );
 		Ref<Font> font=get_font("font");
 		Ref<Texture> _icon;
@@ -115,6 +122,8 @@ void Button::_notification(int p_what) {
 				text_ofs.y+=style->get_offset().y;
 			} break;
 			case ALIGN_CENTER: {
+				if (text_ofs.x<0)
+					text_ofs.x=0;
 				text_ofs+=icon_ofs;
 				text_ofs+=style->get_offset();
 			} break;
@@ -132,11 +141,7 @@ void Button::_notification(int p_what) {
 			_icon->draw(ci,Point2(style->get_offset().x, Math::floor( (size.height-_icon->get_height())/2.0 ) ),is_disabled()?Color(1,1,1,0.4):Color(1,1,1) );
 		}
 
-		if (has_focus()) {
 
-			Ref<StyleBox> style = get_stylebox("focus");
-			style->draw(ci,Rect2(Point2(),size));
-		}
 				
 	}
 }

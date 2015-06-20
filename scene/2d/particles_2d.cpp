@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -250,6 +250,7 @@ void Particles2D::_process_particles(float p_delta) {
 		if (time_to_live < 0) {
 
 			emitting = false;
+			_change_notify("config/emitting");
 		};
 	};
 
@@ -502,19 +503,6 @@ void Particles2D::_notification(int p_what) {
 			if (!local_space)
 				invxform=get_global_transform().affine_inverse();
 
-			int col_count=0;
-			float last=-1;
-			ColorPhase cphase[MAX_COLOR_PHASES];
-
-			for(int i=0;i<color_phase_count;i++) {
-
-				if (color_phases[i].pos<=last)
-					break;
-				cphase[i]=color_phases[i];
-				col_count++;
-			}
-
-
 			int start_particle = (int)(time * (float)particle_count / lifetime);
 			
 			for (int id=0;id<particle_count;++id) {
@@ -536,32 +524,14 @@ void Particles2D::_notification(int p_what) {
 
 				uint32_t rand_seed=p.seed*(i+1);
 
-
-				int cpos=0;
-
-				while(cpos<col_count) {
-
-					if (cphase[cpos].pos > ptime)
-						break;
-					cpos++;
-				}
-
-				cpos--;
-
 				Color color;
-				//could be faster..
-				if (cpos==-1)
-					color=Color(1,1,1,1);
-				else {
-					if (cpos==col_count-1)
-						color=cphase[cpos].color;
-					else {
-						float diff = (cphase[cpos+1].pos-cphase[cpos].pos);
-						if (diff>0)
-							color=cphase[cpos].color.linear_interpolate(cphase[cpos+1].color, (ptime - cphase[cpos].pos) / diff );
-						else
-							color=cphase[cpos+1].color;
-					}
+
+				if(color_ramp.is_valid())
+				{
+					color = color_ramp->get_color_at_offset(ptime);
+				} else
+				{
+					color = default_color;
 				}
 
 
@@ -717,6 +687,7 @@ void Particles2D::set_emitting(bool p_emitting) {
 		time_to_live = emit_timeout;
 	};
 	emitting=p_emitting;
+	_change_notify("config/emitting");
 }
 
 bool Particles2D::is_emitting() const {
@@ -811,6 +782,27 @@ Ref<Texture> Particles2D::get_texture() const {
 	return texture;
 }
 
+void Particles2D::set_color(const Color& p_color) {
+
+	default_color = p_color;
+}
+
+Color Particles2D::get_color() const {
+
+	return default_color;
+}
+
+
+void Particles2D::set_color_ramp(const Ref<ColorRamp>& p_color_ramp) {
+
+	color_ramp=p_color_ramp;
+}
+
+Ref<ColorRamp> Particles2D::get_color_ramp() const {
+
+	return color_ramp;
+}
+
 void Particles2D::set_emissor_offset(const Point2& p_offset) {
 
 	emissor_offset=p_offset;
@@ -832,40 +824,76 @@ bool Particles2D::is_using_local_space() const {
 	return local_space;
 }
 
-
+//Deprecated. Converts color phases to color ramp
 void Particles2D::set_color_phases(int p_phases) {
 
-	ERR_FAIL_INDEX(p_phases,MAX_COLOR_PHASES+1);
-	color_phase_count=p_phases;
+	//Create color ramp if we have 2 or more phases.
+	//Otherwise first phase phase will be assigned to default color.
+	if(p_phases > 1 && color_ramp.is_null())
+	{
+		color_ramp = Ref<ColorRamp>(memnew (ColorRamp()));
+	}
+	if(color_ramp.is_valid())
+	{
+		color_ramp->get_points().resize(p_phases);
+	}
 }
 
+//Deprecated.
 int Particles2D::get_color_phases() const {
 
-	return color_phase_count;
+	if(color_ramp.is_valid())
+	{
+		return color_ramp->get_points_count();
+	}
+	return 0;
 }
 
+//Deprecated. Converts color phases to color ramp
 void Particles2D::set_color_phase_color(int p_phase,const Color& p_color) {
 
 	ERR_FAIL_INDEX(p_phase,MAX_COLOR_PHASES);
-	color_phases[p_phase].color=p_color;
-
+	if(color_ramp.is_valid())
+	{
+		if(color_ramp->get_points_count() > p_phase)
+			color_ramp->set_color(p_phase, p_color);
+	} else
+	{
+		if(p_phase == 0)
+			default_color = p_color;
+	}
 }
+
+//Deprecated.
 Color Particles2D::get_color_phase_color(int p_phase) const {
 
 	ERR_FAIL_INDEX_V(p_phase,MAX_COLOR_PHASES,Color());
-	return color_phases[p_phase].color;
+	if(color_ramp.is_valid())
+	{
+		return color_ramp->get_color(p_phase);
+	}
+	return Color(0,0,0,1);
 }
 
+//Deprecated. Converts color phases to color ramp
 void Particles2D::set_color_phase_pos(int p_phase,float p_pos) {
 	ERR_FAIL_INDEX(p_phase,MAX_COLOR_PHASES);
 	ERR_FAIL_COND(p_pos<0.0 || p_pos>1.0);
-	color_phases[p_phase].pos=p_pos;
-
+	if(color_ramp.is_valid() && color_ramp->get_points_count() > p_phase)
+	{
+		return color_ramp->set_offset(p_phase, p_pos);
+	}
 }
+
+//Deprecated.
 float Particles2D::get_color_phase_pos(int p_phase) const {
 
 	ERR_FAIL_INDEX_V(p_phase,MAX_COLOR_PHASES,0);
-	return color_phases[p_phase].pos;
+	if(color_ramp.is_valid())
+	{
+		return color_ramp->get_offset(p_phase);
+	}
+	return 0;
 }
 
 void Particles2D::set_emission_half_extents(const Vector2& p_extents) {
@@ -995,6 +1023,12 @@ void Particles2D::_bind_methods() {
 	ObjectTypeDB::bind_method(_MD("set_texture:Texture","texture"),&Particles2D::set_texture);
 	ObjectTypeDB::bind_method(_MD("get_texture:Texture"),&Particles2D::get_texture);
 
+	ObjectTypeDB::bind_method(_MD("set_color","color"),&Particles2D::set_color);
+	ObjectTypeDB::bind_method(_MD("get_color"),&Particles2D::get_color);
+
+	ObjectTypeDB::bind_method(_MD("set_color_ramp:ColorRamp","color_ramp"),&Particles2D::set_color_ramp);
+	ObjectTypeDB::bind_method(_MD("get_color_ramp:ColorRamp"),&Particles2D::get_color_ramp);
+
 	ObjectTypeDB::bind_method(_MD("set_emissor_offset","offset"),&Particles2D::set_emissor_offset);
 	ObjectTypeDB::bind_method(_MD("get_emissor_offset"),&Particles2D::get_emissor_offset);
 
@@ -1053,7 +1087,6 @@ void Particles2D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT,"config/v_frames",PROPERTY_HINT_RANGE,"1,512,1"),_SCS("set_v_frames"),_SCS("get_v_frames"));
 
 
-
 	for(int i=0;i<PARAM_MAX;i++) {
 		ADD_PROPERTYI(PropertyInfo(Variant::REAL,_particlesframe_property_names[i],PROPERTY_HINT_RANGE,_particlesframe_property_ranges[i]),_SCS("set_param"),_SCS("get_param"),i);
 	}
@@ -1062,14 +1095,17 @@ void Particles2D::_bind_methods() {
 		ADD_PROPERTYI(PropertyInfo(Variant::REAL,_particlesframe_property_rnames[i],PROPERTY_HINT_RANGE,"-1,1,0.01"),_SCS("set_randomness"),_SCS("get_randomness"),i);
 	}
 
-	ADD_PROPERTY( PropertyInfo( Variant::INT, "color_phases/count",PROPERTY_HINT_RANGE,"0,4,1"), _SCS("set_color_phases"), _SCS("get_color_phases"));
+	ADD_PROPERTY( PropertyInfo( Variant::INT, "color_phases/count",PROPERTY_HINT_RANGE,"0,4,1", 0), _SCS("set_color_phases"), _SCS("get_color_phases"));
 
+	//Backward compatibility. They will be converted to color ramp
 	for(int i=0;i<MAX_COLOR_PHASES;i++) {
 		String phase="phase_"+itos(i)+"/";
-		ADD_PROPERTYI( PropertyInfo( Variant::REAL, phase+"pos", PROPERTY_HINT_RANGE,"0,1,0.01"),_SCS("set_color_phase_pos"),_SCS("get_color_phase_pos"),i );
-		ADD_PROPERTYI( PropertyInfo( Variant::COLOR, phase+"color"),_SCS("set_color_phase_color"),_SCS("get_color_phase_color"),i );
+		ADD_PROPERTYI( PropertyInfo( Variant::REAL, phase+"pos", PROPERTY_HINT_RANGE,"0,1,0.01", 0),_SCS("set_color_phase_pos"),_SCS("get_color_phase_pos"),i );
+		ADD_PROPERTYI( PropertyInfo( Variant::COLOR, phase+"color", PROPERTY_HINT_NONE, "", 0),_SCS("set_color_phase_color"),_SCS("get_color_phase_color"),i );
 	}
 
+	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "color/color"),_SCS("set_color"),_SCS("get_color"));
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"color/color_ramp",PROPERTY_HINT_RESOURCE_TYPE,"ColorRamp"),_SCS("set_color_ramp"),_SCS("get_color_ramp"));
 
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2_ARRAY,"emission_points",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NOEDITOR),_SCS("set_emission_points"),_SCS("get_emission_points"));
 
@@ -1077,20 +1113,23 @@ void Particles2D::_bind_methods() {
 	BIND_CONSTANT( PARAM_SPREAD );
 	BIND_CONSTANT( PARAM_LINEAR_VELOCITY );
 	BIND_CONSTANT( PARAM_SPIN_VELOCITY );
+	BIND_CONSTANT( PARAM_ORBIT_VELOCITY );
 	BIND_CONSTANT( PARAM_GRAVITY_DIRECTION );
 	BIND_CONSTANT( PARAM_GRAVITY_STRENGTH );
 	BIND_CONSTANT( PARAM_RADIAL_ACCEL );
 	BIND_CONSTANT( PARAM_TANGENTIAL_ACCEL );
+	BIND_CONSTANT( PARAM_DAMPING );
+	BIND_CONSTANT( PARAM_INITIAL_ANGLE );
 	BIND_CONSTANT( PARAM_INITIAL_SIZE );
 	BIND_CONSTANT( PARAM_FINAL_SIZE );
 	BIND_CONSTANT( PARAM_HUE_VARIATION );
+	BIND_CONSTANT( PARAM_ANIM_SPEED_SCALE );
+	BIND_CONSTANT( PARAM_ANIM_INITIAL_POS );
 	BIND_CONSTANT( PARAM_MAX );
 
 	BIND_CONSTANT( MAX_COLOR_PHASES );
 
 }
-
-
 
 Particles2D::Particles2D() {
 
@@ -1111,6 +1150,7 @@ Particles2D::Particles2D() {
 	set_param(PARAM_FINAL_SIZE,1.0);
 	set_param(PARAM_ANIM_SPEED_SCALE,1.0);
 
+	set_color(Color(1,1,1,1));
 
 	time=0;
 	lifetime=2;
@@ -1122,17 +1162,6 @@ Particles2D::Particles2D() {
 	preprocess=0;
 	time_scale=1.0;
 
-	color_phase_count=1;
-
-	set_color_phase_pos(0,0.0);
-	set_color_phase_pos(1,1.0);
-	set_color_phase_pos(2,1.0);
-	set_color_phase_pos(3,1.0);
-
-	set_color_phase_color(0,Color(1,1,1));
-	set_color_phase_color(1,Color(0,0,0));
-	set_color_phase_color(2,Color(0,0,0));
-	set_color_phase_color(3,Color(0,0,0));
 
 	flip_h=false;
 	flip_v=false;

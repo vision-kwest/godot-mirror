@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -229,6 +229,11 @@ void CreateDialog::_notification(int p_what) {
 
 		connect("confirmed",this,"_confirmed");
 		_update_search();
+	}
+	if (p_what==NOTIFICATION_EXIT_TREE) {
+
+		disconnect("confirmed",this,"_confirmed");
+
 	}
 
 	if (p_what==NOTIFICATION_VISIBILITY_CHANGED) {

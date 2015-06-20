@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -90,7 +90,7 @@ public:
 	void add_icon_check_item(const Ref<Texture>& p_icon,const String& p_label,int p_ID=-1,uint32_t p_accel=0);
 	void add_check_item(const String& p_label,int p_ID=-1,uint32_t p_accel=0);
 	void add_submenu_item(const String& p_label,const String& p_submenu, int p_ID=-1);
-	
+
 	void set_item_text(int p_idx,const String& p_text);
 	void set_item_icon(int p_idx,const Ref<Texture>& p_icon);
 	void set_item_checked(int p_idx,bool p_checked);	

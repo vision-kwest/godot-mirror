@@ -37,6 +37,13 @@ import android.view.MotionEvent;
 import android.content.ContextWrapper;
 import android.view.InputDevice;
 
+import	android.app.ActivityManager;
+import  android.app.ActivityManager.RunningAppProcessInfo;
+import  android.app.ActivityManager.MemoryInfo;
+import android.os.Debug;
+
+import java.util.List;
+
 import java.io.File;
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -68,25 +75,36 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 	//private static boolean firsttime=true;
 	public boolean firsttime;
 	public int frame_count;	
-	
+	public boolean new_ctx;
+
 	public GodotRenderer()
 	{
 		super();
 		frame_count = 0;
 		firsttime = true;
+		new_ctx = false;
 		//Log.d("Godot", "GodotRenderer() - CONSTRUCTOR");
 	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
 		if (GodotLib.mIsInitialized){
+			
+			if (frame_count == 0){
+				Log.d("Godot", "Before first step!!!!!!!!!!!!!!!");
+				printMemory();
+			}
+			
 			GodotLib.step();
-			if (frame_count % 100 == 0 || frame_count == 0){
+			if (frame_count % 100 == 0 || frame_count == 0 || frame_count == 1){
 				Log.d("Godot", "GodotLib.step("+frame_count+")");
+				printMemory();
+				Log.d("Godot", "Godot.singleton_count == "+Godot.singleton_count);
 			}
 			frame_count++;
 			GodotWallpaperService.step++;
 		}
+
 		for(int i=0;i<Godot.singleton_count;i++) {
 			Godot.singletons[i].onGLDrawFrame(gl);
 		}
@@ -94,7 +112,7 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 	}
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
-		//Log.d("Godot", "GodotRenderer.onSurfaceChanged()");
+		Log.d("Godot", "GodotRenderer.onSurfaceChanged()");
 		if (GodotLib.mIsInitialized){
 			GodotLib.resize(width, height,!firsttime);
 			Log.d("Godot", "GodotLib.resize()");
@@ -103,23 +121,58 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 		for(int i=0;i<Godot.singleton_count;i++) {
 			Godot.singletons[i].onGLSurfaceChanged(gl, width, height);
 		}
+		
+		
+		printMemory();
+		
+		
 	}
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 		GodotWallpaperService.mNumContext++;
 		Log.d("Godot", "GodotRenderer.onSurfaceCreated("+GodotWallpaperService.mNumContext+")");
 		//if (GodotWallpaperService.mNumContext == 2){
-		if (GodotLib.mIsInitialized){			
+		if (GodotLib.mIsInitialized){	
+			if (!new_ctx){
 			GodotLib.newcontext();
+			new_ctx = true;
 			Log.d("Godot", "GodotLib.newcontext() - NEW CONTEXT");
+		    }
+			
+			
+			
+			
+			printMemory();
+			
+			
+			
+			/*
+			if (GodotWallpaperService.mNumContext < 3){
+			  GodotLib.newcontext();
+			  Log.d("Godot", "GodotLib.newcontext() - NEW CONTEXT");
+		    }else{
+			  GodotLib.newcontext2();
+			  Log.d("Godot", "GodotLib.newcontext2() - NEW CONTEXT");
+		    }		
+			*/
 		}
-		/*if (GodotWallpaperService.mNumContext == 1){
-			Log.d("Godot", "GodotLib.newcontext() - NEW CONTEXT");
-			GodotLib.newcontext();
-		}else{
-			GodotLib.newcontext2();
-		}*/
-		
 	}
+	
+	
+	
+	public void printMemory() {
+		ActivityManager manager =  (ActivityManager) GodotWallpaperService.io.ctx_wrapper.getApplicationContext().getSystemService(GodotWallpaperService.io.ctx_wrapper.getApplicationContext().ACTIVITY_SERVICE);
+		List<RunningAppProcessInfo> activityes = ((ActivityManager)manager).getRunningAppProcesses();
+		for (int iCnt = 0; iCnt < activityes.size(); iCnt++){
+			int[] pids = {activityes.get(iCnt).pid};
+			Debug.MemoryInfo[] memInfo = manager.getProcessMemoryInfo(pids);
+			
+			Log.d("Godot", "APP("+iCnt +"): "+ activityes.get(iCnt).processName +" PID: "+ activityes.get(iCnt).pid);
+			Log.d("Godot", "Pss("+memInfo[0].getTotalPss() +") PrivateDirty("+ memInfo[0].getTotalPrivateDirty()+")");
+		}
+	}
+	
+	
+	
 }
 

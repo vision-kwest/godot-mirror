@@ -484,6 +484,7 @@ public class GodotIO {
 			}
 
 			Intent intent = new Intent();
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // For launching web browser from LiveWallpaper
 			intent.setAction(Intent.ACTION_VIEW);
 			if (!type.equals("")) {
 				intent.setDataAndType(Uri.parse(path), type);

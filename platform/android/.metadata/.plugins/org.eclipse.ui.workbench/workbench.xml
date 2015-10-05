@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<workbench progressCount="40" version="2.0">
+<workbench progressCount="29" version="2.0">
 <workbenchAdvisor/>
-<window height="767" width="1018" x="498" y="187">
+<window height="600" width="1165" x="572" y="449">
 <fastViewData fastViewLocation="1024"/>
 <perspectiveBar>
 <itemSize x="160"/>
@@ -19,7 +19,7 @@
 <coolItem id="org.eclipse.wst.xml.ui.perspective.NewFileToolBar" itemType="typeToolBarContribution" x="-1" y="-1"/>
 <coolItem id="org.eclipse.wst.xml.ui.design.DesignToolBar" itemType="typeToolBarContribution" x="-1" y="-1"/>
 <coolItem id="org.eclipse.debug.ui.launch.toolbar" itemType="typeToolBarContribution" x="-1" y="-1"/>
-<coolItem id="org.eclipse.debug.ui.main.toolbar" itemType="typeToolBarContribution" x="130" y="30"/>
+<coolItem id="org.eclipse.debug.ui.main.toolbar" itemType="typeToolBarContribution" x="40" y="30"/>
 <coolItem id="com.python.pydev.toolbars.evaluateActionSetterToolbar" itemType="typeToolBarContribution" x="-1" y="-1"/>
 <coolItem id="group.nav" itemType="typeGroupMarker"/>
 <coolItem id="org.eclipse.ui.workbench.navigate" itemType="typeToolBarContribution" x="232" y="30"/>
@@ -43,10 +43,7 @@
 </view>
 <view id="org.eclipse.ui.views.ProblemView" partName="Problems">
 <viewState PRIMARY_SORT_FIELD="org.eclipse.ui.ide.severityAndDescriptionField" categoryGroup="org.eclipse.ui.ide.severity" markerContentGenerator="org.eclipse.ui.ide.problemsGenerator" partName="Problems">
-<expanded>
-<category IMemento.internal.id="Warnings (33 items)"/>
-</expanded>
-<columnWidths org.eclipse.ui.ide.locationField="105" org.eclipse.ui.ide.markerType="105" org.eclipse.ui.ide.pathField="140" org.eclipse.ui.ide.resourceField="105" org.eclipse.ui.ide.severityAndDescriptionField="350"/>
+<columnWidths org.eclipse.ui.ide.locationField="105" org.eclipse.ui.ide.markerType="202" org.eclipse.ui.ide.pathField="140" org.eclipse.ui.ide.resourceField="105" org.eclipse.ui.ide.severityAndDescriptionField="350"/>
 <visible IMemento.internal.id="org.eclipse.ui.ide.severityAndDescriptionField"/>
 <visible IMemento.internal.id="org.eclipse.ui.ide.resourceField"/>
 <visible IMemento.internal.id="org.eclipse.ui.ide.pathField"/>
@@ -164,46 +161,33 @@
 <view id="org.eclipse.ui.views.TaskList"/>
 <view id="org.eclipse.ui.console.ConsoleView"/>
 <fastViewBars/>
-<layout>
-<mainWindow>
-<info folder="true" part="topLeft">
-<folder activePageID="org.eclipse.ui.navigator.ProjectExplorer" appearance="2" expanded="2">
-<page content="org.eclipse.ui.navigator.ProjectExplorer" label="Project Explorer"/>
+<layout>&#x0A;<mainWindow>&#x0A;<info folder="true" part="topLeft">&#x0A;<folder activePageID="org.eclipse.ui.navigator.ProjectExplorer" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ui.navigator.ProjectExplorer" label="Project Explorer"/>
 <page content="org.eclipse.ui.views.BookmarkView" label="LabelNotFound"/>
 <page content="org.eclipse.ui.views.ResourceNavigator" label="LabelNotFound"/>
 <page content="org.eclipse.team.ccvs.ui.RepositoriesView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
-<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
 </presentation>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@56c4bee" ratio="0.7495049" ratioLeft="757" ratioRight="253" relationship="2" relative="topLeft">
-<folder appearance="2" expanded="2">
-<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@56c4bee" ratio="0.7495049" ratioLeft="757" ratioRight="253" relationship="2" relative="topLeft">&#x0A;<folder appearance="2" expanded="2">&#x0A;<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
 <page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
 <page content="org.eclipse.ui.cheatsheets.views.CheatSheetView" label="LabelNotFound"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
 <info part="org.eclipse.ui.editorss" ratio="0.25940594" ratioLeft="262" ratioRight="748" relationship="2" relative="topLeft"/>
-<info folder="true" part="bottomRight" ratio="0.6596386" ratioLeft="438" ratioRight="226" relationship="4" relative="org.eclipse.ui.editorss">
-<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
-<page content="org.eclipse.ui.views.TaskList" label="Tasks"/>
+<info folder="true" part="bottomRight" ratio="0.6596386" ratioLeft="438" ratioRight="226" relationship="4" relative="org.eclipse.ui.editorss">&#x0A;<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ui.views.TaskList" label="Tasks"/>
 <page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
 <page content="org.eclipse.team.ui.GenericHistoryView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
-<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
 <part id="1"/>
 </presentation>
 </folder>
 </info>
-<info folder="true" part="bottomLeft" ratio="0.5" ratioLeft="332" ratioRight="332" relationship="4" relative="topLeft">
-<folder activePageID="org.eclipse.ui.views.ContentOutline" appearance="2" expanded="2">
-<page content="org.eclipse.ui.views.ContentOutline" label="Outline"/>
+<info folder="true" part="bottomLeft" ratio="0.5" ratioLeft="332" ratioRight="332" relationship="4" relative="topLeft">&#x0A;<folder activePageID="org.eclipse.ui.views.ContentOutline" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ui.views.ContentOutline" label="Outline"/>
 <page content="org.eclipse.mylyn.tasks.ui.views.tasks" label="Task List"/>
 <page content="org.eclipse.ant.ui.views.AntView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
-<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
 <part id="1"/>
 </presentation>
 </folder>
@@ -356,7 +340,6 @@
 <trimItem IMemento.internal.id="org.eclise.ui.internal.FastViewBar"/>
 <trimItem IMemento.internal.id="org.eclipse.jface.action.StatusLineManager"/>
 <trimItem IMemento.internal.id="org.eclipse.ui.internal.progress.ProgressRegion"/>
-<trimItem IMemento.internal.id="org.eclipse.ui.internal.intro.impl.presentations.IntroLaunchBar"/>
 </trimArea>
 </trimLayout>
 </window>

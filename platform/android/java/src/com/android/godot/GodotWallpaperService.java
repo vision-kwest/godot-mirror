@@ -1,6 +1,10 @@
 package com.android.godot;
 
+import java.util.List;
+
 import net.rbgrn.android.glwallpaperservice.GLWallpaperService;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -10,8 +14,13 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.util.Log;
 
+import android.os.Debug;
 import android.os.SystemClock;
 import android.provider.Settings.Secure;
+
+
+import  android.app.ActivityManager.MemoryInfo;
+
 
 public class GodotWallpaperService extends GLWallpaperService {
 	static public GodotIO io;
@@ -33,6 +42,18 @@ public class GodotWallpaperService extends GLWallpaperService {
 		Log.d("Godot", "GodotWallpaperService()");
 		//GodotLib.mIsInitialized = false;
 		//mEngine = new MyEngine();
+		
+		/*
+		ActivityManager manager =  (ActivityManager) this.getApplicationContext().getSystemService(this.getApplicationContext().ACTIVITY_SERVICE);
+		List<RunningAppProcessInfo> activityes = ((ActivityManager)manager).getRunningAppProcesses();
+		for (int iCnt = 0; iCnt < activityes.size(); iCnt++){
+			int[] pids = {activityes.get(iCnt).pid};
+			Debug.MemoryInfo[] memInfo = manager.getProcessMemoryInfo(pids);
+			
+			Log.d("Godot", "APP("+iCnt +"): "+ activityes.get(iCnt).processName +" PID: "+ activityes.get(iCnt).pid);
+			Log.d("Godot", "Pss("+memInfo[0].getTotalPss() +") PrivateDirty("+ memInfo[0].getTotalPrivateDirty()+")");
+		}
+		*/
 	}
 	
 	
@@ -45,6 +66,21 @@ public class GodotWallpaperService extends GLWallpaperService {
 			GodotLib.initializeWallpaper(this, !io.needsReloadHooks(), command_line);
 			Log.d("Godot", "GodotLib.initializeWallpaper()");
 			GodotLib.mIsInitialized = true;
+			
+			io.gotOffsetEvent(0.5f); // init to center of screen
+
+			
+			ActivityManager manager =  (ActivityManager) this.getApplicationContext().getSystemService(this.getApplicationContext().ACTIVITY_SERVICE);
+			List<RunningAppProcessInfo> activityes = ((ActivityManager)manager).getRunningAppProcesses();
+			for (int iCnt = 0; iCnt < activityes.size(); iCnt++){
+				int[] pids = {activityes.get(iCnt).pid};
+				Debug.MemoryInfo[] memInfo = manager.getProcessMemoryInfo(pids);
+				
+				Log.d("Godot", "APP("+iCnt +"): "+ activityes.get(iCnt).processName +" PID: "+ activityes.get(iCnt).pid);
+				Log.d("Godot", "Pss("+memInfo[0].getTotalPss() +") PrivateDirty("+ memInfo[0].getTotalPrivateDirty()+")");
+			}
+			
+			
 		}
 	}
 
@@ -87,7 +123,7 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 		public MyEngine() {
 			super();
-			//Log.d("Godot", "GodotWallpaperService.MyEngine.MyEngine()");
+			Log.d("Godot", "GodotWallpaperService.MyEngine.MyEngine()");
 			// handle prefs, other initialization
 			mRenderer = new GodotRenderer();	
 			setEGLContextClientVersion(2);
@@ -137,9 +173,10 @@ public class GodotWallpaperService extends GLWallpaperService {
 		@Override
 		public void onTouchEvent(MotionEvent event) {
 			//Log.d("Godot", "GodotWallpaperService.MyEngine.onTouchEvent()");
-			super.onTouchEvent(event);		
-			//io.gotTouchEvent(event);
-			
+			super.onTouchEvent(event);	
+//			if (this.isPreview()){
+			  io.gotTouchEvent(event);
+//			}
 			/*
 			boolean is_button_down = MotionEvent.ACTION_DOWN == event.getActionMasked();
 			if (is_button_down){

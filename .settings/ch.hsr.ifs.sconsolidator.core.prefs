@@ -1,4 +1,0 @@
-additionalCommandlineOptions=-j 4 platform\=android target\=release_debug
-ch.hsr.sconsolidator.core.BuildSettingsPreferencePage_useParentScope=false
-eclipse.preferences.version=1
-perfAccuracyProfile=default

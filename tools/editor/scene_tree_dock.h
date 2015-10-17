@@ -62,6 +62,7 @@ class SceneTreeDock : public VBoxContainer {
 		TOOL_MOVE_DOWN,
 		TOOL_DUPLICATE,
 		TOOL_REPARENT,
+		TOOL_MULTI_EDIT,
 		TOOL_ERASE,
 		TOOL_BUTTON_MAX
 	};
@@ -119,6 +120,7 @@ class SceneTreeDock : public VBoxContainer {
 	void _import_subscene();
 
 	bool _validate_no_foreign();
+	void _selection_changed();
 
 	void _fill_path_renames(Vector<StringName> base_path,Vector<StringName> new_base_path,Node * p_node, List<Pair<NodePath,NodePath> > *p_renames);
 
@@ -134,6 +136,7 @@ public:
 	void set_selected(Node *p_node, bool p_emit_selected=false);
 	void fill_path_renames(Node* p_node, Node *p_new_parent, List<Pair<NodePath,NodePath> > *p_renames);
 	void perform_node_renames(Node* p_base,List<Pair<NodePath,NodePath> > *p_renames, Map<Ref<Animation>, Set<int> > *r_rem_anims=NULL);
+	SceneTreeEditor *get_tree_editor() { return scene_tree; }
 
 	SceneTreeDock(EditorNode *p_editor,Node *p_scene_root,EditorSelection *p_editor_selection,EditorData &p_editor_data);
 };

@@ -258,7 +258,18 @@ friend class TreeItem;
 	TreeItem *popup_edited_item;
 	TreeItem *selected_item;
 	TreeItem *edited_item;
+
+
 	int pressed_button;
+	bool pressing_for_editor;
+	String pressing_for_editor_text;
+	Vector2 pressing_pos;
+	Rect2 pressing_item_rect;
+
+	float range_drag_base;
+	bool range_drag_enabled;
+	Vector2 range_drag_capture_pos;
+
 
 	//TreeItem *cursor_item;
 	//int cursor_column;
@@ -453,6 +464,8 @@ public:
 
 	void set_cursor_can_exit_tree(bool p_enable);
 	bool can_cursor_exit_tree() const;
+
+	VScrollBar *get_vscroll_bar() { return v_scroll; }
 
 	Tree();
 	~Tree();	

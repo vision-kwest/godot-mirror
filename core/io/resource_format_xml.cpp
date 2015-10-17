@@ -29,10 +29,10 @@
 #include "resource_format_xml.h"
 #include "globals.h"
 #include "version.h"
+#include "os/dir_access.h"
 
 
-
-ResourceInteractiveLoaderXML::Tag* ResourceInteractiveLoaderXML::parse_tag(bool *r_exit,bool p_printerr) {
+ResourceInteractiveLoaderXML::Tag* ResourceInteractiveLoaderXML::parse_tag(bool *r_exit, bool p_printerr, List<String> *r_order) {
 
 
 	while(get_char()!='<' && !f->eof_reached()) {}
@@ -107,7 +107,11 @@ ResourceInteractiveLoaderXML::Tag* ResourceInteractiveLoaderXML::parse_tag(bool 
 				if (r_value.size()) {
 
 					r_value.push_back(0);
-					tag.args[name].parse_utf8(r_value.get_data());
+					String str;
+					str.parse_utf8(r_value.get_data());
+					tag.args[name]=str;
+					if (r_order)
+						r_order->push_back(name);
 				}
 				break;
 
@@ -119,7 +123,11 @@ ResourceInteractiveLoaderXML::Tag* ResourceInteractiveLoaderXML::parse_tag(bool 
 				} else if (reading_value && r_value.size()) {
 
 					r_value.push_back(0);
-					tag.args[name].parse_utf8(r_value.get_data());
+					String str;
+					str.parse_utf8(r_value.get_data());
+					tag.args[name]=str;
+					if (r_order)
+						r_order->push_back(name);
 					name="";
 					r_value.clear();
 					reading_value=false;
@@ -463,6 +471,10 @@ Error ResourceInteractiveLoaderXML::parse_property(Variant& r_v, String &r_name)
 
 			}
 
+			if (remaps.has(path)) {
+				path=remaps[path];
+			}
+
 			//take advantage of the resource loader cache. The resource is cached on it, even if
 			RES res=ResourceLoader::load(path,hint);
 
@@ -473,7 +485,28 @@ Error ResourceInteractiveLoaderXML::parse_property(Variant& r_v, String &r_name)
 			}
 
 			r_v=res.get_ref_ptr();
+		} else if (tag->args.has("external")) {
+
+			int index = tag->args["external"].to_int();
+			if (ext_resources.has(index)) {
+				String path=ext_resources[index].path;
+				String type=ext_resources[index].type;
+
+				//take advantage of the resource loader cache. The resource is cached on it, even if
+				RES res=ResourceLoader::load(path,type);
+
+				if (res.is_null()) {
+
+					WARN_PRINT(String("Couldn't load externalresource: "+path).ascii().get_data());
+				}
+
+				r_v=res.get_ref_ptr();
+			} else {
+				WARN_PRINT(String("Invalid external resource index: "+itos(index)).ascii().get_data());
+
+			}
 		}
+
 
 
 
@@ -1207,47 +1240,47 @@ Error ResourceInteractiveLoaderXML::parse_property(Variant& r_v, String &r_name)
 
 
 		r_v=Vector3(
-				data.get_slice(",",0).to_double(),
-				data.get_slice(",",1).to_double(),
-				data.get_slice(",",2).to_double()
+				data.get_slicec(',',0).to_double(),
+				data.get_slicec(',',1).to_double(),
+				data.get_slicec(',',2).to_double()
 			   );
 
 	} else if (type=="vector2") {
 
 
 		r_v=Vector2(
-				data.get_slice(",",0).to_double(),
-				data.get_slice(",",1).to_double()
+				data.get_slicec(',',0).to_double(),
+				data.get_slicec(',',1).to_double()
 			   );
 
 	} else if (type=="plane") {
 
 		r_v=Plane(
-				data.get_slice(",",0).to_double(),
-				data.get_slice(",",1).to_double(),
-				data.get_slice(",",2).to_double(),
-				data.get_slice(",",3).to_double()
+				data.get_slicec(',',0).to_double(),
+				data.get_slicec(',',1).to_double(),
+				data.get_slicec(',',2).to_double(),
+				data.get_slicec(',',3).to_double()
 			 );
 
 	} else if (type=="quaternion") {
 
 		r_v=Quat(
-				data.get_slice(",",0).to_double(),
-				data.get_slice(",",1).to_double(),
-				data.get_slice(",",2).to_double(),
-				data.get_slice(",",3).to_double()
+				data.get_slicec(',',0).to_double(),
+				data.get_slicec(',',1).to_double(),
+				data.get_slicec(',',2).to_double(),
+				data.get_slicec(',',3).to_double()
 			 );
 
 	} else if (type=="rect2") {
 
 		r_v=Rect2(
 			Vector2(
-				data.get_slice(",",0).to_double(),
-				data.get_slice(",",1).to_double()
+				data.get_slicec(',',0).to_double(),
+				data.get_slicec(',',1).to_double()
 			),
 			Vector2(
-				data.get_slice(",",2).to_double(),
-				data.get_slice(",",3).to_double()
+				data.get_slicec(',',2).to_double(),
+				data.get_slicec(',',3).to_double()
 			)
 		);
 
@@ -1256,14 +1289,14 @@ Error ResourceInteractiveLoaderXML::parse_property(Variant& r_v, String &r_name)
 
 		r_v=AABB(
 			Vector3(
-				data.get_slice(",",0).to_double(),
-				data.get_slice(",",1).to_double(),
-				data.get_slice(",",2).to_double()
+				data.get_slicec(',',0).to_double(),
+				data.get_slicec(',',1).to_double(),
+				data.get_slicec(',',2).to_double()
 			),
 			Vector3(
-				data.get_slice(",",3).to_double(),
-				data.get_slice(",",4).to_double(),
-				data.get_slice(",",5).to_double()
+				data.get_slicec(',',3).to_double(),
+				data.get_slicec(',',4).to_double(),
+				data.get_slicec(',',5).to_double()
 			)
 		);
 
@@ -1272,7 +1305,7 @@ Error ResourceInteractiveLoaderXML::parse_property(Variant& r_v, String &r_name)
 		Matrix32 m3;
 		for (int i=0;i<3;i++) {
 			for (int j=0;j<2;j++) {
-				m3.elements[i][j]=data.get_slice(",",i*2+j).to_double();
+				m3.elements[i][j]=data.get_slicec(',',i*2+j).to_double();
 			}
 		}
 		r_v=m3;
@@ -1282,7 +1315,7 @@ Error ResourceInteractiveLoaderXML::parse_property(Variant& r_v, String &r_name)
 		Matrix3 m3;
 		for (int i=0;i<3;i++) {
 			for (int j=0;j<3;j++) {
-				m3.elements[i][j]=data.get_slice(",",i*3+j).to_double();
+				m3.elements[i][j]=data.get_slicec(',',i*3+j).to_double();
 			}
 		}
 		r_v=m3;
@@ -1292,24 +1325,24 @@ Error ResourceInteractiveLoaderXML::parse_property(Variant& r_v, String &r_name)
 		Transform tr;
 		for (int i=0;i<3;i++) {
 			for (int j=0;j<3;j++) {
-				tr.basis.elements[i][j]=data.get_slice(",",i*3+j).to_double();
+				tr.basis.elements[i][j]=data.get_slicec(',',i*3+j).to_double();
 			}
 
 		}
 		tr.origin=Vector3(
-			     data.get_slice(",",9).to_double(),
-			     data.get_slice(",",10).to_double(),
-			     data.get_slice(",",11).to_double()
+			     data.get_slicec(',',9).to_double(),
+			     data.get_slicec(',',10).to_double(),
+			     data.get_slicec(',',11).to_double()
 			   );
 		r_v=tr;
 
 	} else if (type=="color") {
 
 		r_v=Color(
-			   data.get_slice(",",0).to_double(),
-			   data.get_slice(",",1).to_double(),
-			   data.get_slice(",",2).to_double(),
-			   data.get_slice(",",3).to_double()
+			   data.get_slicec(',',0).to_double(),
+			   data.get_slicec(',',1).to_double(),
+			   data.get_slicec(',',2).to_double(),
+			   data.get_slicec(',',3).to_double()
 			 );
 
 	} else if (type=="node_path") {
@@ -1364,32 +1397,6 @@ Error ResourceInteractiveLoaderXML::poll() {
 	if (error!=OK)
 		return error;
 
-	if (ext_resources.size()) {
-
-		error=ERR_FILE_CORRUPT;
-		String path=ext_resources.front()->get();
-
-		RES res = ResourceLoader::load(path);
-
-		if (res.is_null()) {
-
-			if (ResourceLoader::get_abort_on_missing_resources()) {
-				ERR_EXPLAIN(local_path+":"+itos(get_current_line())+": editor exported nonexistent resource at: "+path);
-				ERR_FAIL_V(error);
-			} else {
-				ResourceLoader::notify_load_error("Resource Not Found: "+path);
-			}
-		} else {
-
-			resource_cache.push_back(res);
-		}
-
-		error=OK;
-		ext_resources.pop_front();
-		resource_current++;
-		return error;
-	}
-
 	bool exit;
 	Tag *tag = parse_tag(&exit);
 
@@ -1413,11 +1420,12 @@ Error ResourceInteractiveLoaderXML::poll() {
 		ERR_EXPLAIN(local_path+":"+itos(get_current_line())+": <ext_resource> missing 'path' field.");
 		ERR_FAIL_COND_V(!tag->args.has("path"),ERR_FILE_CORRUPT);
 
-		String type;
+		String type="Resource";
 		if (tag->args.has("type"))
 			type=tag->args["type"];
 
 		String path = tag->args["path"];
+
 
 		ERR_EXPLAIN(local_path+":"+itos(get_current_line())+": <ext_resource> can't use a local path, this is a bug?.");
 		ERR_FAIL_COND_V(path.begins_with("local://"),ERR_FILE_CORRUPT);
@@ -1427,6 +1435,9 @@ Error ResourceInteractiveLoaderXML::poll() {
 			path=Globals::get_singleton()->localize_path(local_path.get_base_dir().plus_file(path));
 		}
 
+		if (remaps.has(path)) {
+			path=remaps[path];
+		}
 
 		RES res = ResourceLoader::load(path,type);
 
@@ -1436,12 +1447,20 @@ Error ResourceInteractiveLoaderXML::poll() {
 				ERR_EXPLAIN(local_path+":"+itos(get_current_line())+": <ext_resource> referenced nonexistent resource at: "+path);
 				ERR_FAIL_V(error);
 			} else {
-				ResourceLoader::notify_load_error("Resource Not Found: "+path);
+				ResourceLoader::notify_dependency_error(local_path,path,type);
 			}
 		} else {
 
 			resource_cache.push_back(res);
 		}
+
+		if (tag->args.has("index")) {
+			ExtResource er;
+			er.path=path;
+			er.type=type;
+			ext_resources[tag->args["index"].to_int()]=er;
+		}
+
 
 		Error err = close_tag("ext_resource");
 		if (err)
@@ -1466,6 +1485,7 @@ Error ResourceInteractiveLoaderXML::poll() {
 
 	String type;
 	String path;
+	int subres=0;
 
 	if (!main) {
 		//loading resource
@@ -1476,11 +1496,15 @@ Error ResourceInteractiveLoaderXML::poll() {
 		ERR_EXPLAIN(local_path+":"+itos(get_current_line())+": <resource> missing 'type' field.");
 		ERR_FAIL_COND_V(!tag->args.has("type"),ERR_FILE_CORRUPT);
 		path=tag->args["path"];
+
 		error=OK;
 
 		if (path.begins_with("local://")) {
 			//built-in resource (but really external)
-			path=path.replace("local://",local_path+"::");
+
+			path=path.replace("local://","");
+			subres=path.to_int();
+			path=local_path+"::"+path;
 		}
 
 
@@ -1519,6 +1543,7 @@ Error ResourceInteractiveLoaderXML::poll() {
 	res = RES( r );
 	if (path!="")
 		r->set_path(path);
+	r->set_subindex(subres);
 
 	//load properties
 
@@ -1560,7 +1585,7 @@ int ResourceInteractiveLoaderXML::get_stage() const {
 }
 int ResourceInteractiveLoaderXML::get_stage_count() const {
 
-	return resources_total+ext_resources.size();
+	return resources_total;//+ext_resources;
 }
 
 ResourceInteractiveLoaderXML::~ResourceInteractiveLoaderXML() {
@@ -1568,7 +1593,7 @@ ResourceInteractiveLoaderXML::~ResourceInteractiveLoaderXML() {
 	memdelete(f);
 }
 
-void ResourceInteractiveLoaderXML::get_dependencies(FileAccess *f,List<String> *p_dependencies) {
+void ResourceInteractiveLoaderXML::get_dependencies(FileAccess *f,List<String> *p_dependencies,bool p_add_types) {
 
 
 	open(f);
@@ -1611,6 +1636,10 @@ void ResourceInteractiveLoaderXML::get_dependencies(FileAccess *f,List<String> *
 			path = ResourceLoader::guess_full_filename(path,type);
 		}
 
+		if (p_add_types && tag->args.has("type")) {
+			path+="::"+tag->args["type"];
+		}
+
 		p_dependencies->push_back(path);
 
 		Error err = close_tag("ext_resource");
@@ -1619,6 +1648,167 @@ void ResourceInteractiveLoaderXML::get_dependencies(FileAccess *f,List<String> *
 
 		error=OK;
 	}
+
+}
+
+Error ResourceInteractiveLoaderXML::rename_dependencies(FileAccess *p_f, const String &p_path,const Map<String,String>& p_map) {
+
+	open(p_f);
+	ERR_FAIL_COND_V(error!=OK,error);
+
+	//FileAccess
+
+	bool old_format=false;
+
+	FileAccess *fw = NULL;
+
+	String base_path=local_path.get_base_dir();
+
+	while(true) {
+		bool exit;
+		List<String> order;
+
+		Tag *tag = parse_tag(&exit,true,&order);
+
+		bool done=false;
+
+		if (!tag) {
+			if (fw) {
+				memdelete(fw);
+			}
+			error=ERR_FILE_CORRUPT;
+			ERR_FAIL_COND_V(!exit,error);
+			error=ERR_FILE_EOF;
+
+			return error;
+		}
+
+		if (tag->name=="ext_resource") {
+
+			if (!tag->args.has("index") || !tag->args.has("path") || !tag->args.has("type")) {
+				old_format=true;
+				break;
+			}
+
+			if (!fw) {
+
+				fw=FileAccess::open(p_path+".depren",FileAccess::WRITE);
+				fw->store_line("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"); //no escape
+				fw->store_line("<resource_file type=\""+resource_type+"\" subresource_count=\""+itos(resources_total)+"\" version=\""+itos(VERSION_MAJOR)+"."+itos(VERSION_MINOR)+"\" version_name=\""+VERSION_FULL_NAME+"\">");
+
+			}
+
+			String path = tag->args["path"];
+			String index = tag->args["index"];
+			String type = tag->args["type"];
+
+
+			bool relative=false;
+			if (!path.begins_with("res://")) {
+				path=base_path.plus_file(path).simplify_path();
+				relative=true;
+			}
+
+
+			if (p_map.has(path)) {
+				String np=p_map[path];
+				path=np;
+			}
+
+			if (relative) {
+				//restore relative
+				path=base_path.path_to_file(path);
+			}
+
+			tag->args["path"]=path;
+			tag->args["index"]=index;
+			tag->args["type"]=type;
+
+		} else {
+
+			done=true;
+		}
+
+		String tagt="\t<";
+		if (exit)
+			tagt+="/";
+		tagt+=tag->name;
+
+		for(List<String>::Element *E=order.front();E;E=E->next()) {
+			tagt+=" "+E->get()+"=\""+tag->args[E->get()]+"\"";
+		}
+		tagt+=">";
+		fw->store_line(tagt);
+		if (done)
+			break;
+		close_tag("ext_resource");
+		fw->store_line("\t</ext_resource>");
+
+	}
+
+
+	if (old_format) {
+		if (fw)
+			memdelete(fw);
+
+		DirAccess *da = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
+		da->remove(p_path+".depren");
+		memdelete(da);
+		//fuck it, use the old approach;
+
+		WARN_PRINT(("This file is old, so it can't refactor dependencies, opening and resaving: "+p_path).utf8().get_data());
+
+		Error err;
+		FileAccess *f2 = FileAccess::open(p_path,FileAccess::READ,&err);
+		if (err!=OK) {
+			ERR_FAIL_COND_V(err!=OK,ERR_FILE_CANT_OPEN);
+		}
+
+		Ref<ResourceInteractiveLoaderXML> ria = memnew( ResourceInteractiveLoaderXML );
+		ria->local_path=Globals::get_singleton()->localize_path(p_path);
+		ria->res_path=ria->local_path;
+		ria->remaps=p_map;
+	//	ria->set_local_path( Globals::get_singleton()->localize_path(p_path) );
+		ria->open(f2);
+
+		err = ria->poll();
+
+		while(err==OK) {
+			err=ria->poll();
+		}
+
+		ERR_FAIL_COND_V(err!=ERR_FILE_EOF,ERR_FILE_CORRUPT);
+		RES res = ria->get_resource();
+		ERR_FAIL_COND_V(!res.is_valid(),ERR_FILE_CORRUPT);
+
+		return ResourceFormatSaverXML::singleton->save(p_path,res);
+	}
+
+	if (!fw) {
+
+		return OK; //nothing to rename, do nothing
+	}
+
+	uint8_t c=f->get_8();
+	while(!f->eof_reached()) {
+		fw->store_8(c);
+		c=f->get_8();
+	}
+
+	bool all_ok = fw->get_error()==OK;
+
+	memdelete(fw);
+
+	if (!all_ok) {
+		return ERR_CANT_CREATE;
+	}
+
+	DirAccess *da = DirAccess::create(DirAccess::ACCESS_RESOURCES);
+	da->remove(p_path);
+	da->rename(p_path+".depren",p_path);
+	memdelete(da);
+
+	return OK;
 
 }
 
@@ -1668,8 +1858,8 @@ void ResourceInteractiveLoaderXML::open(FileAccess *p_f) {
 		ERR_FAIL();
 	}
 
-	int major = version.get_slice(".",0).to_int();
-	int minor = version.get_slice(".",1).to_int();
+	int major = version.get_slicec('.',0).to_int();
+	int minor = version.get_slicec('.',1).to_int();
 
 	if (major>VERSION_MAJOR) {
 
@@ -1680,6 +1870,7 @@ void ResourceInteractiveLoaderXML::open(FileAccess *p_f) {
 
 	}
 
+	/*
 	String preload_depts = "deps/"+local_path.md5_text();
 	if (Globals::get_singleton()->has(preload_depts)) {
 		ext_resources.clear();
@@ -1691,7 +1882,7 @@ void ResourceInteractiveLoaderXML::open(FileAccess *p_f) {
 		}
 		print_line(local_path+" - EXTERNAL RESOURCES: "+itos(ext_resources.size()));
 	}
-
+*/
 
 }
 
@@ -1724,7 +1915,10 @@ String ResourceInteractiveLoaderXML::recognize(FileAccess *p_f) {
 
 /////////////////////
 
-Ref<ResourceInteractiveLoader> ResourceFormatLoaderXML::load_interactive(const String &p_path) {
+Ref<ResourceInteractiveLoader> ResourceFormatLoaderXML::load_interactive(const String &p_path, Error *r_error) {
+
+	if (r_error)
+		*r_error=ERR_CANT_OPEN;
 
 	Error err;
 	FileAccess *f = FileAccess::open(p_path,FileAccess::READ,&err);
@@ -1810,7 +2004,7 @@ String ResourceFormatLoaderXML::get_resource_type(const String &p_path) const{
 }
 
 
-void ResourceFormatLoaderXML::get_dependencies(const String& p_path,List<String> *p_dependencies) {
+void ResourceFormatLoaderXML::get_dependencies(const String& p_path,List<String> *p_dependencies,bool p_add_types) {
 
 	FileAccess *f = FileAccess::open(p_path,FileAccess::READ);
 	if (!f) {
@@ -1822,10 +2016,26 @@ void ResourceFormatLoaderXML::get_dependencies(const String& p_path,List<String>
 	ria->local_path=Globals::get_singleton()->localize_path(p_path);
 	ria->res_path=ria->local_path;
 //	ria->set_local_path( Globals::get_singleton()->localize_path(p_path) );
-	ria->get_dependencies(f,p_dependencies);
+	ria->get_dependencies(f,p_dependencies,p_add_types);
 
 
 }
+
+Error ResourceFormatLoaderXML::rename_dependencies(const String &p_path,const Map<String,String>& p_map) {
+
+	FileAccess *f = FileAccess::open(p_path,FileAccess::READ);
+	if (!f) {
+
+		ERR_FAIL_V(ERR_CANT_OPEN);
+	}
+
+	Ref<ResourceInteractiveLoaderXML> ria = memnew( ResourceInteractiveLoaderXML );
+	ria->local_path=Globals::get_singleton()->localize_path(p_path);
+	ria->res_path=ria->local_path;
+//	ria->set_local_path( Globals::get_singleton()->localize_path(p_path) );
+	return ria->rename_dependencies(f,p_path,p_map);
+}
+
 
 /****************************************************************************************/
 /****************************************************************************************/
@@ -2018,20 +2228,26 @@ void ResourceFormatSaverXMLInstance::write_property(const String& p_name,const V
 				return; // don't save it
 			}
 
-			params="resource_type=\""+res->get_save_type()+"\"";
+			if (external_resources.has(res)) {
 
-			if (res->get_path().length() && res->get_path().find("::")==-1) {
-				//external resource
-				String path=relative_paths?local_path.path_to_file(res->get_path()):res->get_path();
-				escape(path);
-				params+=" path=\""+path+"\"";
+				params="external=\""+itos(external_resources[res])+"\"";
 			} else {
+				params="resource_type=\""+res->get_save_type()+"\"";
 
-				//internal resource
-				ERR_EXPLAIN("Resource was not pre cached for the resource section, bug?");
-				ERR_FAIL_COND(!resource_map.has(res));
 
-				params+=" path=\"local://"+itos(resource_map[res])+"\"";
+				if (res->get_path().length() && res->get_path().find("::")==-1) {
+					//external resource
+					String path=relative_paths?local_path.path_to_file(res->get_path()):res->get_path();
+					escape(path);
+					params+=" path=\""+path+"\"";
+				} else {
+
+					//internal resource
+					ERR_EXPLAIN("Resource was not pre cached for the resource section, bug?");
+					ERR_FAIL_COND(!resource_set.has(res));
+
+					params+=" path=\"local://"+itos(res->get_subindex())+"\"";
+				}
 			}
 
 		} break;
@@ -2435,15 +2651,16 @@ void ResourceFormatSaverXMLInstance::_find_resources(const Variant& p_variant,bo
 
 			RES res = p_variant.operator RefPtr();
 
-			if (res.is_null())
+			if (res.is_null() || external_resources.has(res))
 				return;
 
 			if (!p_main && (!bundle_resources ) && res->get_path().length() && res->get_path().find("::") == -1 ) {
-				external_resources.push_back(res);
+				int index = external_resources.size();
+				external_resources[res]=index;
 				return;
 			}
 
-			if (resource_map.has(res))
+			if (resource_set.has(res))
 				return;
 
 			List<PropertyInfo> property_list;
@@ -2466,7 +2683,7 @@ void ResourceFormatSaverXMLInstance::_find_resources(const Variant& p_variant,bo
 				I=I->next();
 			}
 
-			resource_map[ res ] = resource_map.size(); //saved after, so the childs it needs are available when loaded
+			resource_set.insert( res ); //saved after, so the childs it needs are available when loaded
 			saved_resources.push_back(res);
 
 		} break;
@@ -2527,22 +2744,37 @@ Error ResourceFormatSaverXMLInstance::save(const String &p_path,const RES& p_res
 	enter_tag("resource_file","type=\""+p_resource->get_type()+"\" subresource_count=\""+itos(saved_resources.size()+external_resources.size())+"\" version=\""+itos(VERSION_MAJOR)+"."+itos(VERSION_MINOR)+"\" version_name=\""+VERSION_FULL_NAME+"\"");
 	write_string("\n",false);
 
-	for(List<RES>::Element *E=external_resources.front();E;E=E->next()) {
+	for(Map<RES,int>::Element *E=external_resources.front();E;E=E->next()) {
 
 		write_tabs();
-		String p = E->get()->get_path();
+		String p = E->key()->get_path();
 
-		enter_tag("ext_resource","path=\""+p+"\" type=\""+E->get()->get_save_type()+"\""); //bundled
+		enter_tag("ext_resource","path=\""+p+"\" type=\""+E->key()->get_save_type()+"\" index=\""+itos(E->get())+"\""); //bundled
 		exit_tag("ext_resource"); //bundled
 		write_string("\n",false);
 	}
 
-
+	Set<int> used_indices;
 
 	for(List<RES>::Element *E=saved_resources.front();E;E=E->next()) {
 
 		RES res = E->get();
-		ERR_CONTINUE(!resource_map.has(res));
+		if (E->next() && (res->get_path()=="" || res->get_path().find("::") != -1 )) {
+
+			if (res->get_subindex()!=0) {
+				if (used_indices.has(res->get_subindex())) {
+					res->set_subindex(0); //repeated
+				} else {
+					used_indices.insert(res->get_subindex());
+				}
+			}
+		}
+	}
+
+	for(List<RES>::Element *E=saved_resources.front();E;E=E->next()) {
+
+		RES res = E->get();
+		ERR_CONTINUE(!resource_set.has(res));
 		bool main = (E->next()==NULL);
 
 		write_tabs();
@@ -2552,7 +2784,18 @@ Error ResourceFormatSaverXMLInstance::save(const String &p_path,const RES& p_res
 		else if (res->get_path().length() && res->get_path().find("::") == -1 )
 			enter_tag("resource","type=\""+res->get_type()+"\" path=\""+res->get_path()+"\""); //bundled
 		else {
-			int idx = resource_map[res];
+
+			if (res->get_subindex()==0) {
+				int new_subindex=1;
+				if (used_indices.size()) {
+					new_subindex=used_indices.back()->get()+1;
+				}
+
+				res->set_subindex(new_subindex);
+				used_indices.insert(new_subindex);
+			}
+
+			int idx = res->get_subindex();
 			enter_tag("resource","type=\""+res->get_type()+"\" path=\"local://"+itos(idx)+"\"");
 			if (takeover_paths) {
 				res->set_path(p_path+"::"+itos(idx),true);
@@ -2575,8 +2818,11 @@ Error ResourceFormatSaverXMLInstance::save(const String &p_path,const RES& p_res
 
 				String name = PE->get().name;
 				Variant value = res->get(name);
-				if (PE->get().usage&PROPERTY_USAGE_STORE_IF_NONZERO && value.is_zero())
+
+
+				if ((PE->get().usage&PROPERTY_USAGE_STORE_IF_NONZERO && value.is_zero())||(PE->get().usage&PROPERTY_USAGE_STORE_IF_NONONE && value.is_one()) )
 					continue;
+
 
 				write_property(name,value);
 			}
@@ -2631,4 +2877,9 @@ void ResourceFormatSaverXML::get_recognized_extensions(const RES& p_resource,Lis
 		p_extensions->push_back("x"+base);
 	}
 
+}
+
+ResourceFormatSaverXML* ResourceFormatSaverXML::singleton=NULL;
+ResourceFormatSaverXML::ResourceFormatSaverXML() {
+	singleton=this;
 }

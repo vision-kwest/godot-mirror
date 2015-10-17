@@ -35,10 +35,10 @@ bool AnimationPlayer::_set(const StringName& p_name, const Variant& p_value) {
 
 	String name=p_name;
 
-	if (name=="playback/speed" || name=="speed") { //bw compatibility
+	if (p_name==SceneStringNames::get_singleton()->playback_speed || p_name==SceneStringNames::get_singleton()->speed) { //bw compatibility
 		set_speed(p_value);
 
-	} else if (name=="playback/active") {
+	} else if (p_name==SceneStringNames::get_singleton()->playback_active) {
 		set_active(p_value);
 	} else if (name.begins_with("playback/play")) {
 
@@ -52,16 +52,16 @@ bool AnimationPlayer::_set(const StringName& p_name, const Variant& p_value) {
 	} else if (name.begins_with("anims/")) {
 	
 
-		String which=name.get_slice("/",1);
+		String which=name.get_slicec('/',1);
 		
 		add_animation(which,p_value);
 	} else if (name.begins_with("next/")) {
 
 
-		String which=name.get_slice("/",1);
+		String which=name.get_slicec('/',1);
 		animation_set_next(which,p_value);
 
-	} else if (name=="blend_times") {
+	} else if (p_name==SceneStringNames::get_singleton()->blend_times) {
 	
 		Array array=p_value;
 		int len = array.size();
@@ -77,7 +77,7 @@ bool AnimationPlayer::_set(const StringName& p_name, const Variant& p_value) {
 			set_blend_time(from,to,time);
 		}
 
-	} else if (name=="autoplay") {
+	} else if (p_name==SceneStringNames::get_singleton()->autoplay) {
 		autoplay=p_value;
 	
 	} else
@@ -106,12 +106,12 @@ bool AnimationPlayer::_get(const StringName& p_name,Variant &r_ret) const {
 
 	} else if (name.begins_with("anims/")) {
 	
-		String which=name.get_slice("/",1);
+		String which=name.get_slicec('/',1);
 		
 		r_ret= get_animation(which).get_ref_ptr();
 	} else if (name.begins_with("next/")) {
 
-		String which=name.get_slice("/",1);
+		String which=name.get_slicec('/',1);
 
 		r_ret= animation_get_next(which);
 
@@ -661,8 +661,11 @@ void AnimationPlayer::_animation_process(float p_delta) {
 
 Error AnimationPlayer::add_animation(const StringName& p_name, const Ref<Animation>& p_animation) {
 
+#ifdef DEBUG_ENABLED
 	ERR_EXPLAIN("Invalid animation name: "+String(p_name));
 	ERR_FAIL_COND_V( String(p_name).find("/")!=-1 || String(p_name).find(":")!=-1 || String(p_name).find(",")!=-1 || String(p_name).find("[")!=-1, ERR_INVALID_PARAMETER );
+#endif
+
 	ERR_FAIL_COND_V( p_animation.is_null() , ERR_INVALID_PARAMETER );
 	
 	//print_line("Add anim: "+String(p_name)+" name: "+p_animation->get_name());
@@ -853,6 +856,11 @@ void AnimationPlayer::queue(const StringName& p_name) {
 void AnimationPlayer::clear_queue() {
 	queued.clear();
 };
+
+void AnimationPlayer::play_backwards(const StringName& p_name,float p_custom_blend) {
+
+	play(p_name,p_custom_blend,-1,true);
+}
 
 void AnimationPlayer::play(const StringName& p_name, float p_custom_blend, float p_custom_scale,bool p_from_end) {
 
@@ -1213,6 +1221,7 @@ void AnimationPlayer::_bind_methods() {
 	ObjectTypeDB::bind_method(_MD("get_default_blend_time"),&AnimationPlayer::get_default_blend_time);
 
 	ObjectTypeDB::bind_method(_MD("play","name","custom_blend","custom_speed","from_end"),&AnimationPlayer::play,DEFVAL(""),DEFVAL(-1),DEFVAL(1.0),DEFVAL(false));
+	ObjectTypeDB::bind_method(_MD("play_backwards","name","custom_blend"),&AnimationPlayer::play_backwards,DEFVAL(""),DEFVAL(-1));
 	ObjectTypeDB::bind_method(_MD("stop","reset"),&AnimationPlayer::stop,DEFVAL(true));
 	ObjectTypeDB::bind_method(_MD("stop_all"),&AnimationPlayer::stop_all);
 	ObjectTypeDB::bind_method(_MD("is_playing"),&AnimationPlayer::is_playing);
@@ -1271,7 +1280,7 @@ AnimationPlayer::AnimationPlayer() {
 	animation_process_mode=ANIMATION_PROCESS_IDLE;
 	processing=false;
         default_blend_time=0;
-	root=NodePath("..");
+	root=SceneStringNames::get_singleton()->path_pp;
 	playing = false;
 	active=true;
 }

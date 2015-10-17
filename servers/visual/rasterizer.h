@@ -594,6 +594,7 @@ public:
 		RID shadow_buffer;
 		int shadow_buffer_size;
 		float shadow_esm_mult;
+		Color shadow_color;
 
 
 		void *texture_cache; // implementation dependent
@@ -612,6 +613,7 @@ public:
 		CanvasLight() {
 			enabled=true;			
 			color=Color(1,1,1);
+			shadow_color=Color(0,0,0,0);
 			height=0;
 			z_min=-1024;
 			z_max=1024;
@@ -1023,6 +1025,7 @@ public:
 
 	virtual bool has_feature(VS::Features p_feature) const=0;
 
+	virtual void restore_framebuffer()=0;
 
 	virtual int get_render_info(VS::RenderInfo p_info)=0;
 

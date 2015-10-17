@@ -1013,10 +1013,16 @@ void RasterizerGLES2::texture_set_data(RID p_texture,const Image& p_image,VS::Cu
 
 	bool force_clamp_to_edge = !(texture->flags&VS::TEXTURE_FLAG_MIPMAPS && !texture->ignore_mipmaps) && (nearest_power_of_2(texture->alloc_height)!=texture->alloc_height || nearest_power_of_2(texture->alloc_width)!=texture->alloc_width);
 
-	if (!force_clamp_to_edge && texture->flags&VS::TEXTURE_FLAG_REPEAT && texture->target != GL_TEXTURE_CUBE_MAP) {
+	if (!force_clamp_to_edge && (texture->flags&VS::TEXTURE_FLAG_REPEAT || texture->flags&VS::TEXTURE_FLAG_MIRRORED_REPEAT) && texture->target != GL_TEXTURE_CUBE_MAP) {
 
-		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		if (texture->flags&VS::TEXTURE_FLAG_MIRRORED_REPEAT){
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT );
+		}
+		else{
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		}
 	} else {
 
 		//glTexParameterf( texture->target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE );
@@ -1270,10 +1276,16 @@ void RasterizerGLES2::texture_set_flags(RID p_texture,uint32_t p_flags) {
 
 	bool force_clamp_to_edge = !(p_flags&VS::TEXTURE_FLAG_MIPMAPS && !texture->ignore_mipmaps) && (nearest_power_of_2(texture->alloc_height)!=texture->alloc_height || nearest_power_of_2(texture->alloc_width)!=texture->alloc_width);
 
-	if (!force_clamp_to_edge && texture->flags&VS::TEXTURE_FLAG_REPEAT && texture->target != GL_TEXTURE_CUBE_MAP) {
+	if (!force_clamp_to_edge && (texture->flags&VS::TEXTURE_FLAG_REPEAT || texture->flags&VS::TEXTURE_FLAG_MIRRORED_REPEAT) && texture->target != GL_TEXTURE_CUBE_MAP) {
 
-		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		if (texture->flags&VS::TEXTURE_FLAG_MIRRORED_REPEAT){
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT );
+		}
+		else {
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		}
 	} else {
 		//glTexParameterf( texture->target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE );
 		glTexParameterf( texture->target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -4150,7 +4162,7 @@ void RasterizerGLES2::begin_frame() {
 
 	//fragment_lighting=Globals::get_singleton()->get("rasterizer/use_fragment_lighting");
 #ifdef TOOLS_ENABLED
-	canvas_shader.set_conditional(CanvasShaderGLES2::USE_PIXEL_SNAP,GLOBAL_DEF("rasterizer/use_pixel_snap",false));
+	canvas_shader.set_conditional(CanvasShaderGLES2::USE_PIXEL_SNAP,GLOBAL_DEF("display/use_2d_pixel_snap",false));
 	shadow_filter=ShadowFilterTechnique(int(Globals::get_singleton()->get("rasterizer/shadow_filter")));
 #endif
 
@@ -4165,7 +4177,6 @@ void RasterizerGLES2::begin_frame() {
 	time_delta=time-last_time;
 	last_time=time;
 	frame++;
-	clear_viewport(Color(1,0,0.5));
 
 	_rinfo.vertex_count=0;
 	_rinfo.object_count=0;
@@ -5974,6 +5985,10 @@ void RasterizerGLES2::_render(const Geometry *p_geometry,const Material *p_mater
 
 			if (element_count==0)
 				return;
+
+			if (mm->visible>=0) {
+				element_count=MIN(element_count,mm->visible);
+			}
 
 			const MultiMesh::Element *elements=&mm->elements[0];
 
@@ -9553,6 +9568,7 @@ void RasterizerGLES2::canvas_render_items(CanvasItem *p_item_list,int p_z,const 
 						canvas_shader.set_uniform(CanvasShaderGLES2::SHADOW_TEXTURE,max_texture_units-3);
 						canvas_shader.set_uniform(CanvasShaderGLES2::SHADOW_MATRIX,light->shadow_matrix_cache);
 						canvas_shader.set_uniform(CanvasShaderGLES2::SHADOW_ESM_MULTIPLIER,light->shadow_esm_mult);
+						canvas_shader.set_uniform(CanvasShaderGLES2::LIGHT_SHADOW_COLOR,light->shadow_color);
 
 					}
 
@@ -10808,7 +10824,7 @@ void RasterizerGLES2::init() {
 	copy_shader.set_conditional(CopyShaderGLES2::USE_8BIT_HDR,!use_fp16_fb);
 	canvas_shader.set_conditional(CanvasShaderGLES2::USE_DEPTH_SHADOWS,read_depth_supported);
 
-	canvas_shader.set_conditional(CanvasShaderGLES2::USE_PIXEL_SNAP,GLOBAL_DEF("rasterizer/use_pixel_snap",false));
+	canvas_shader.set_conditional(CanvasShaderGLES2::USE_PIXEL_SNAP,GLOBAL_DEF("display/use_2d_pixel_snap",false));
 
 	npo2_textures_available=true;
 	//fragment_lighting=false;
@@ -11459,6 +11475,12 @@ RasterizerGLES2::RasterizerGLES2(bool p_compress_arrays,bool p_keep_ram_copy,boo
 	tc0_id_cache=0;
 	tc0_idx=0;
 };
+
+void RasterizerGLES2::restore_framebuffer() {
+
+	glBindFramebuffer(GL_FRAMEBUFFER, base_framebuffer);
+	
+}
 
 RasterizerGLES2::~RasterizerGLES2() {
 

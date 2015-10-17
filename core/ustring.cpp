@@ -67,11 +67,14 @@ void String::copy_from(const char *p_cstr) {
 		return;
 	}
 	
+
 	resize(len+1); // include 0
 	
-	for(int i=0;i<len+1;i++) {
-	
-		set(i,p_cstr[i]);
+	CharType *dst = this->ptr();
+
+	for (int i=0;i<len+1;i++) {
+
+		dst[i]=p_cstr[i];
 	}
 
 }
@@ -486,7 +489,7 @@ String String::capitalize() const {
 	String cap;
 	for (int i=0;i<aux.get_slice_count(" ");i++) {
 		
-		String slice=aux.get_slice(" ",i);
+		String slice=aux.get_slicec(' ',i);
 		if (slice.length()>0) {
 		
 			slice[0]=_find_upper(slice[0]);
@@ -574,6 +577,41 @@ String String::get_slice(String p_splitter, int p_slice) const {
 	}
 
 	return ""; //no find!
+
+}
+
+String String::get_slicec(CharType p_splitter, int p_slice) const {
+
+	if (empty())
+		return String();
+
+	if (p_slice<0)
+		return String();
+
+	const CharType *c=this->ptr();
+	int i=0;
+	int prev=0;
+	int count=0;
+	while(true) {
+
+
+		if (c[i]==0 || c[i]==p_splitter) {
+
+			if (p_slice==count) {
+
+				return substr(prev,i-prev);
+			} else {
+				count++;
+				prev=i+1;
+			}
+
+		}
+
+		i++;
+
+	}
+
+	return String(); //no find!
 
 }
 
@@ -3010,6 +3048,37 @@ bool String::is_valid_identifier() const {
 
 //kind of poor should be rewritten properly
 
+String String::world_wrap(int p_chars_per_line) const {
+
+	int from=0;
+	int last_space=0;
+	String ret;
+	for(int i=0;i<length();i++) {
+		if (i-from>=p_chars_per_line) {
+			if (last_space==-1) {
+				ret+=substr(from,i-from+1)+"\n";
+			} else {
+				ret+=substr(from,last_space-from)+"\n";
+				i=last_space; //rewind
+			}
+			from=i+1;
+			last_space=-1;
+		} else if (operator[](i)==' ' || operator[](i)=='\t') {
+			last_space=i;
+		} else if (operator[](i)=='\n') {
+			ret+=substr(from,i-from);
+			from=i+1;
+			last_space=-1;
+		}
+	}
+
+	if (from<length()) {
+		ret+=substr(from,length());
+	}
+
+	return ret;
+}
+
 String String::c_unescape() const {
 
 	String escaped=*this;
@@ -3050,8 +3119,8 @@ String String::xml_escape(bool p_escape_quotes) const {
 
 	String str=*this;
 	str=str.replace("&","&amp;");
-	str=str.replace("<","&gt;");
-	str=str.replace(">","&lt;");
+	str=str.replace("<","&lt;");
+	str=str.replace(">","&gt;");
 	if (p_escape_quotes) {
 		str=str.replace("'","&apos;");
 		str=str.replace("\"","&quot;");
@@ -3103,12 +3172,12 @@ static _FORCE_INLINE_ int _xml_unescape(const CharType *p_src,int p_src_len,Char
 			} else if (p_src_len>=4 && p_src[1]=='g' && p_src[2]=='t' && p_src[3]==';') {
 
 				if (p_dst)
-					*p_dst='<';
+					*p_dst='>';
 				eat=4;
 			} else if (p_src_len>=4 && p_src[1]=='l' && p_src[2]=='t' && p_src[3]==';') {
 
 				if (p_dst)
-					*p_dst='>';
+					*p_dst='<';
 				eat=4;
 			} else if (p_src_len>=5 && p_src[1]=='a' && p_src[2]=='m' && p_src[3]=='p' && p_src[4]==';') {
 
@@ -3333,8 +3402,8 @@ String String::path_to(const String& p_path) const {
 		//nothing
 	} else {
 		//dos style
-		String src_begin=src.get_slice("/",0);
-		String dst_begin=dst.get_slice("/",0);
+		String src_begin=src.get_slicec('/',0);
+		String dst_begin=dst.get_slicec('/',0);
 
 		if (src_begin!=dst_begin)
 			return p_path; //impossible to do this

@@ -255,6 +255,16 @@ void BaseButton::_notification(int p_what) {
 			group->_remove_button(this);
 	}
 
+	if (p_what==NOTIFICATION_VISIBILITY_CHANGED && !is_visible()) {
+
+		if (!toggle_mode) {
+			status.pressed = false;
+		}
+		status.hovering = false;
+		status.press_attempt = false;
+		status.pressing_inside = false;
+		status.pressing_button = 0;
+	}
 }
 
 void BaseButton::pressed() {
@@ -390,10 +400,10 @@ void BaseButton::_bind_methods() {
 	ADD_SIGNAL( MethodInfo("pressed" ) );
 	ADD_SIGNAL( MethodInfo("released" ) );
 	ADD_SIGNAL( MethodInfo("toggled", PropertyInfo( Variant::BOOL,"pressed") ) );
-	ADD_PROPERTY( PropertyInfo( Variant::BOOL, "disabled"), _SCS("set_disabled"), _SCS("is_disabled"));
+	ADD_PROPERTYNZ( PropertyInfo( Variant::BOOL, "disabled"), _SCS("set_disabled"), _SCS("is_disabled"));
 	ADD_PROPERTY( PropertyInfo( Variant::BOOL, "toggle_mode"), _SCS("set_toggle_mode"), _SCS("is_toggle_mode"));
-    ADD_PROPERTY( PropertyInfo( Variant::BOOL, "is_pressed"), _SCS("set_pressed"), _SCS("is_pressed"));
-	ADD_PROPERTY( PropertyInfo( Variant::BOOL, "click_on_press"), _SCS("set_click_on_press"), _SCS("get_click_on_press"));
+	ADD_PROPERTYNZ( PropertyInfo( Variant::BOOL, "is_pressed"), _SCS("set_pressed"), _SCS("is_pressed"));
+	ADD_PROPERTYNZ( PropertyInfo( Variant::BOOL, "click_on_press"), _SCS("set_click_on_press"), _SCS("get_click_on_press"));
 
 
 	BIND_CONSTANT( DRAW_NORMAL );

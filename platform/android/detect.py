@@ -38,8 +38,6 @@ def get_flags():
 		('nedmalloc', 'no'),
 		('builtin_zlib', 'no'),
                 ('openssl','builtin'), #use builtin openssl
-		('theora','no'), #use builtin openssl
-
         ]
 
 
@@ -54,13 +52,53 @@ def create(env):
 
 def configure(env):
 
+	# Workaround for MinGW. See:
+	# http://www.scons.org/wiki/LongCmdLinesOnWin32
+	import os
+	if (os.name=="nt"):
+	
+		import subprocess
+			
+		def mySubProcess(cmdline,env):
+			#print "SPAWNED : " + cmdline
+			startupinfo = subprocess.STARTUPINFO()
+			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+			proc = subprocess.Popen(cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+				stderr=subprocess.PIPE, startupinfo=startupinfo, shell = False, env = env)
+			data, err = proc.communicate()
+			rv = proc.wait()
+			if rv:
+				print "====="
+				print err
+				print "====="
+			return rv
+				
+		def mySpawn(sh, escape, cmd, args, env):
+								
+			newargs = ' '.join(args[1:])
+			cmdline = cmd + " " + newargs
+				
+			rv=0
+			if len(cmdline) > 32000 and cmd.endswith("ar") :
+				cmdline = cmd + " " + args[1] + " " + args[2] + " "
+				for i in range(3,len(args)) :
+					rv = mySubProcess( cmdline + args[i], env )
+					if rv :
+						break	
+			else:				
+				rv = mySubProcess( cmdline, env )
+					
+			return rv
+				
+		env['SPAWN'] = mySpawn
+	
 	if env['x86']=='yes':
 		env['NDK_TARGET']='x86-4.8'
 
 	if env['PLATFORM'] == 'win32':
 		import methods
 		env.Tool('gcc')
-		env['SPAWN'] = methods.win32_spawn
+		#env['SPAWN'] = methods.win32_spawn
 		env['SHLIBSUFFIX'] = '.so'
 
 #	env.android_source_modules.append("../libs/apk_expansion")	
@@ -134,8 +172,7 @@ def configure(env):
 	env.Append(LDPATH=[ld_path])
 	env.Append(LIBS=['OpenSLES'])
 #	env.Append(LIBS=['c','m','stdc++','log','EGL','GLESv1_CM','GLESv2','OpenSLES','supc++','android'])
-	if (env["ndk_platform"]!="2.2"):
-		env.Append(LIBS=['EGL','OpenSLES','android'])
+	env.Append(LIBS=['EGL','OpenSLES','android'])
 	env.Append(LIBS=['c','m','stdc++','log','GLESv1_CM','GLESv2', 'z'])
 
 	env["LINKFLAGS"]= string.split(" -g --sysroot="+ld_sysroot+" -Wl,--no-undefined -Wl,-z,noexecstack ")
@@ -159,6 +196,10 @@ def configure(env):
 
 	env.Append(CPPFLAGS=['-DANDROID_ENABLED', '-DUNIX_ENABLED', '-DNO_FCNTL','-DMPC_FIXED_POINT'])
 #	env.Append(CPPFLAGS=['-DANDROID_ENABLED', '-DUNIX_ENABLED','-DMPC_FIXED_POINT'])
+
+	if(env["opus"]=="yes"):
+		env.Append(CFLAGS=["-DOPUS_ARM_OPT"])
+		env.opus_fixed_point="yes"
 
 	if (env['android_stl']=='yes'):
 		#env.Append(CCFLAGS=[env["ANDROID_NDK_ROOT"]+"/sources/cxx-stl/system/include"])

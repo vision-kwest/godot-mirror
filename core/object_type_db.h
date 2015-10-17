@@ -228,13 +228,13 @@ public:
 		T::register_custom_data_to_otdb();
 	}
 
-	static void get_type_list( List<String> *p_types);
-	static void get_inheriters_from( const String& p_type,List<String> *p_types);
-	static String type_inherits_from(const String& p_type);
-	static bool type_exists(const String &p_type);
-	static bool is_type(const String &p_type,const String& p_inherits);
-	static bool can_instance(const String &p_type);	
-	static Object *instance(const String &p_type);
+	static void get_type_list( List<StringName> *p_types);
+	static void get_inheriters_from( const StringName& p_type,List<StringName> *p_types);
+	static StringName type_inherits_from(const StringName& p_type);
+	static bool type_exists(const StringName &p_type);
+	static bool is_type(const StringName &p_type,const StringName& p_inherits);
+	static bool can_instance(const StringName &p_type);
+	static Object *instance(const StringName &p_type);
 
 #if 0
 	template<class N, class M>
@@ -475,7 +475,9 @@ public:
 	static void get_integer_constant_list(const StringName& p_type, List<String> *p_constants, bool p_no_inheritance=false);
 	static int get_integer_constant(const StringName& p_type, const StringName &p_name, bool *p_success=NULL);
 	static StringName get_category(const StringName& p_node);
-	
+
+	static bool get_setter_and_type_for_property(const StringName& p_class, const StringName& p_prop, StringName& r_class, StringName& r_setter);
+
 	static void set_type_enabled(StringName p_type,bool p_enable);
 	static bool is_type_enabled(StringName p_type);
 

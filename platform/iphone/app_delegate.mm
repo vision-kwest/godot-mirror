@@ -43,6 +43,11 @@
 #import <AdSupport/AdSupport.h>
 #endif
 
+#ifdef MODULE_PARSE_ENABLED
+#import <Parse/Parse.h>
+#import "FBSDKCoreKit/FBSDKCoreKit.h"
+#endif
+
 #define kFilteringFactor                        0.1
 #define kRenderingFrequency						60
 #define kAccelerometerFrequency         100.0 // Hz
@@ -137,6 +142,30 @@ static int frame_count = 0;
 
 		Main::setup2();
 		++frame_count;
+
+		// this might be necessary before here
+		NSDictionary* dict = [[NSBundle mainBundle] infoDictionary];
+		for (NSString* key in dict) {
+			NSObject* value = [dict objectForKey:key];
+			String ukey = String::utf8([key UTF8String]);
+
+			// we need a NSObject to Variant conversor
+
+			if ([value isKindOfClass:[NSString class]]) {
+				NSString* str = (NSString*)value;
+				String uval = String::utf8([str UTF8String]);
+
+				Globals::get_singleton()->set("Info.plist/"+ukey, uval);
+
+			} else if ([value isKindOfClass:[NSNumber class]]) {
+
+				NSNumber* n = (NSNumber*)value;
+				double dval = [n doubleValue];
+
+				Globals::get_singleton()->set("Info.plist/"+ukey, dval);
+			};
+			// do stuff
+		}
 
 	} break;
 /*
@@ -318,10 +347,45 @@ static int frame_count = 0;
 
 // For 4.2+ support
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+#ifdef MODULE_PARSE_ENABLED
+	NSLog(@"Handling application openURL");
+	return [[FBSDKApplicationDelegate sharedInstance] application:application
+														  openURL:url
+												sourceApplication:sourceApplication
+													   annotation:annotation];
+#endif
+
+
 #ifdef MODULE_FACEBOOKSCORER_IOS_ENABLED
 	return [[[FacebookScorer sharedInstance] facebook] handleOpenURL:url];
 #else
 	return false;
+#endif
+}
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+#ifdef MODULE_PARSE_ENABLED
+	// Store the deviceToken in the current installation and save it to Parse.
+	PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+	//NSString* token = [[NSString alloc] initWithData:deviceToken encoding:NSUTF8StringEncoding];
+	NSLog(@"Device Token : %@ ", deviceToken);
+	[currentInstallation setDeviceTokenFromData:deviceToken];
+	[currentInstallation saveInBackground];
+#endif
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+#ifdef MODULE_PARSE_ENABLED
+	[PFPush handlePush:userInfo];
+	NSDictionary *aps = [userInfo objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	
+	NSLog(@"Push Notification Payload (app active) %@", aps);
+	[defaults setObject:aps forKey:@"notificationInfo"];
+	[defaults synchronize];
+	if (application.applicationState == UIApplicationStateInactive) {
+		[PFAnalytics trackAppOpenedWithRemoteNotificationPayload:userInfo];
+	}
 #endif
 }
 

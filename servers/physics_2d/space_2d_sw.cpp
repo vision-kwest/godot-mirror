@@ -657,8 +657,8 @@ bool Space2DSW::test_body_motion(Body2DSW *p_body,const Vector2&p_motion,float p
 						const Body2DSW *body=static_cast<const Body2DSW*>(col_obj);
 
 						Vector2 cdir = body->get_one_way_collision_direction();
-						if (cdir!=Vector2() && p_motion.dot(cdir)<0)
-							continue;
+						//if (cdir!=Vector2() && p_motion.dot(cdir)<0)
+						//	continue;
 
 						cbk.valid_dir=cdir;
 						cbk.valid_depth=body->get_one_way_collision_max_depth();
@@ -1230,6 +1230,7 @@ void Space2DSW::call_queries() {
 
 void Space2DSW::setup() {
 
+	contact_debug_count=0;
 
 	while(inertia_update_list.first()) {
 		inertia_update_list.first()->self()->update_inertias();
@@ -1302,6 +1303,8 @@ Space2DSW::Space2DSW() {
 	active_objects=0;
 	island_count=0;
 
+	contact_debug_count=0;
+
 	locked=false;
 	contact_recycle_radius=0.01;
 	contact_max_separation=0.05;
@@ -1320,6 +1323,10 @@ Space2DSW::Space2DSW() {
 
 	direct_access = memnew( Physics2DDirectSpaceStateSW );
 	direct_access->space=this;
+
+
+
+
 }
 
 Space2DSW::~Space2DSW() {

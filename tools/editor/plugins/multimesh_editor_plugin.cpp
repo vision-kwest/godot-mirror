@@ -305,7 +305,7 @@ void MultiMeshEditor::edit(MultiMeshInstance *p_multimesh) {
 void MultiMeshEditor::_browse(bool p_source) {
 
 	browsing_source=p_source;
-	std->get_tree()->set_marked(node,false);
+	std->get_scene_tree()->set_marked(node,false);
 	std->popup_centered_ratio();
 	if (p_source)
 		std->set_title("Select a Source Mesh:");
@@ -330,6 +330,8 @@ MultiMeshEditor::MultiMeshEditor() {
 	options->set_area_as_parent_rect();
 
 	options->set_text("MultiMesh");
+	options->set_icon(EditorNode::get_singleton()->get_gui_base()->get_icon("MultiMeshInstance","EditorIcons"));
+
 	options->get_popup()->add_item("Populate Surface");
 	options->get_popup()->connect("item_pressed", this,"_menu_option");
 

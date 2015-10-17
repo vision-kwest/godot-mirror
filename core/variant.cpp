@@ -878,6 +878,63 @@ bool Variant::is_zero() const {
 	return false;
 }
 
+
+bool Variant::is_one() const {
+
+	switch( type ) {
+		case NIL: {
+
+			return true;
+		} break;
+
+		// atomic types
+		case BOOL: {
+
+			return _data._bool==true;
+		} break;
+		case INT: {
+
+			return _data._int==1;
+
+		} break;
+		case REAL: {
+
+			return _data._real==1;
+
+		} break;
+		case VECTOR2: {
+
+			return *reinterpret_cast<const Vector2*>(_data._mem)==Vector2(1,1);
+
+		} break;
+		case RECT2: {
+
+			return *reinterpret_cast<const Rect2*>(_data._mem)==Rect2(1,1,1,1);
+
+		} break;
+		case VECTOR3: {
+
+			return *reinterpret_cast<const Vector3*>(_data._mem)==Vector3(1,1,1);
+
+		} break;
+		case PLANE: {
+
+			return *reinterpret_cast<const Plane*>(_data._mem)==Plane(1,1,1,1);
+
+		} break;
+		case COLOR: {
+
+			return *reinterpret_cast<const Color*>(_data._mem)==Color(1,1,1,1);
+
+		} break;
+
+		default: { return !is_zero(); }
+	}
+
+	return false;
+}
+
+
 void Variant::reference(const Variant& p_variant) {
 
 	
@@ -1535,9 +1592,17 @@ Variant::operator String() const {
 		} break;
 		case OBJECT: {
 
-			if (_get_obj().obj)
+			if (_get_obj().obj) {
+				#ifdef DEBUG_ENABLED
+					if (ScriptDebugger::get_singleton() && _get_obj().ref.is_null()) {
+						//only if debugging!
+						if (!ObjectDB::instance_validate(_get_obj().obj)) {
+							return "[Deleted Object]";
+						};
+					};
+				#endif
 				return "["+_get_obj().obj->get_type()+":"+itos(_get_obj().obj->get_instance_ID())+"]";
-			else
+			} else
 				return "[Object:null]";
 
 		} break;

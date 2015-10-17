@@ -231,6 +231,11 @@ void Spatial::set_transform(const Transform& p_transform) {
 	_change_notify("transform/rotation");
 	_change_notify("transform/scale");
 	_propagate_transform_changed(this);
+	if (data.notify_local_transform) {
+		notification(NOTIFICATION_LOCAL_TRANSFORM_CHANGED);
+	}
+
+
 
 }
 
@@ -335,6 +340,9 @@ void Spatial::set_translation(const Vector3& p_translation) {
 
 	data.local_transform.origin=p_translation;
 	_propagate_transform_changed(this);
+	if (data.notify_local_transform) {
+		notification(NOTIFICATION_LOCAL_TRANSFORM_CHANGED);
+	}
 
 }
 
@@ -348,6 +356,9 @@ void Spatial::set_rotation(const Vector3& p_euler){
 	data.rotation=p_euler;
 	data.dirty|=DIRTY_LOCAL;
 	_propagate_transform_changed(this);
+	if (data.notify_local_transform) {
+		notification(NOTIFICATION_LOCAL_TRANSFORM_CHANGED);
+	}
 
 }
 void Spatial::set_scale(const Vector3& p_scale){
@@ -360,6 +371,9 @@ void Spatial::set_scale(const Vector3& p_scale){
 	data.scale=p_scale;
 	data.dirty|=DIRTY_LOCAL;
 	_propagate_transform_changed(this);
+	if (data.notify_local_transform) {
+		notification(NOTIFICATION_LOCAL_TRANSFORM_CHANGED);
+	}
 
 }
 
@@ -685,6 +699,13 @@ void Spatial::look_at_from_pos(const Vector3& p_pos,const Vector3& p_target, con
 
 }
 
+void Spatial::set_notify_local_transform(bool p_enable) {
+	data.notify_local_transform=p_enable;
+}
+
+bool Spatial::is_local_transform_notification_enabled() const {
+	return data.notify_local_transform;
+}
 
 void Spatial::_bind_methods() {
 
@@ -725,6 +746,9 @@ void Spatial::_bind_methods() {
 	ObjectTypeDB::bind_method(_MD("_set_visible_"), &Spatial::_set_visible_);
 	ObjectTypeDB::bind_method(_MD("_is_visible_"), &Spatial::_is_visible_);
 
+	ObjectTypeDB::bind_method(_MD("set_notify_local_transform","enable"), &Spatial::set_notify_local_transform);
+	ObjectTypeDB::bind_method(_MD("is_local_transform_notification_enabled"), &Spatial::is_local_transform_notification_enabled);
+
 	void rotate(const Vector3& p_normal,float p_radians);
 	void rotate_x(float p_radians);
 	void rotate_y(float p_radians);
@@ -758,7 +782,7 @@ void Spatial::_bind_methods() {
 	ADD_PROPERTY( PropertyInfo(Variant::VECTOR3,"transform/rotation",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR), _SCS("_set_rotation_deg"), _SCS("_get_rotation_deg") );
 	ADD_PROPERTY( PropertyInfo(Variant::VECTOR3,"transform/rotation_rad",PROPERTY_HINT_NONE,"",0), _SCS("set_rotation"), _SCS("get_rotation") );
 	ADD_PROPERTY( PropertyInfo(Variant::VECTOR3,"transform/scale",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR), _SCS("set_scale"), _SCS("get_scale") );
-	ADD_PROPERTY( PropertyInfo(Variant::BOOL,"visibility/visible"), _SCS("_set_visible_"), _SCS("_is_visible_") );
+	ADD_PROPERTYNO( PropertyInfo(Variant::BOOL,"visibility/visible"), _SCS("_set_visible_"), _SCS("_is_visible_") );
 	//ADD_PROPERTY( PropertyInfo(Variant::TRANSFORM,"transform/local"), _SCS("set_transform"), _SCS("get_transform") );
 
 	ADD_SIGNAL( MethodInfo("visibility_changed" ) );
@@ -783,6 +807,7 @@ Spatial::Spatial() : xform_change(this)
 	data.gizmo_disabled=false;
 	data.gizmo_dirty=false;
 #endif
+	data.notify_local_transform=false;
 	data.parent=NULL;
 	data.C=NULL;
 

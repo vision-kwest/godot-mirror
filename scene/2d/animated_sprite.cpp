@@ -28,6 +28,8 @@
 /*************************************************************************/
 #include "animated_sprite.h"
 #include "scene/scene_string_names.h"
+#include "os/os.h"
+
 void AnimatedSprite::edit_set_pivot(const Point2& p_pivot) {
 
 	set_offset(p_pivot);
@@ -153,6 +155,9 @@ void AnimatedSprite::_notification(int p_what) {
 			if (centered)
 				ofs-=s/2;
 
+			if (OS::get_singleton()->get_use_pixel_snap()) {
+				ofs=ofs.floor();
+			}
 			Rect2 dst_rect(ofs,s);
 
 			if (hflip)
@@ -330,11 +335,11 @@ void AnimatedSprite::_bind_methods() {
 
 	ADD_PROPERTYNZ( PropertyInfo( Variant::OBJECT, "frames",PROPERTY_HINT_RESOURCE_TYPE,"SpriteFrames"), _SCS("set_sprite_frames"),_SCS("get_sprite_frames"));
 	ADD_PROPERTYNZ( PropertyInfo( Variant::INT, "frame",PROPERTY_HINT_SPRITE_FRAME), _SCS("set_frame"),_SCS("get_frame"));
-	ADD_PROPERTY( PropertyInfo( Variant::BOOL, "centered"), _SCS("set_centered"),_SCS("is_centered"));
+	ADD_PROPERTYNO( PropertyInfo( Variant::BOOL, "centered"), _SCS("set_centered"),_SCS("is_centered"));
 	ADD_PROPERTYNZ( PropertyInfo( Variant::VECTOR2, "offset"), _SCS("set_offset"),_SCS("get_offset"));
-	ADD_PROPERTY( PropertyInfo( Variant::BOOL, "flip_h"), _SCS("set_flip_h"),_SCS("is_flipped_h"));
-	ADD_PROPERTY( PropertyInfo( Variant::BOOL, "flip_v"), _SCS("set_flip_v"),_SCS("is_flipped_v"));
-	ADD_PROPERTY( PropertyInfo( Variant::COLOR, "modulate"), _SCS("set_modulate"),_SCS("get_modulate"));
+	ADD_PROPERTYNZ( PropertyInfo( Variant::BOOL, "flip_h"), _SCS("set_flip_h"),_SCS("is_flipped_h"));
+	ADD_PROPERTYNZ( PropertyInfo( Variant::BOOL, "flip_v"), _SCS("set_flip_v"),_SCS("is_flipped_v"));
+	ADD_PROPERTYNO( PropertyInfo( Variant::COLOR, "modulate"), _SCS("set_modulate"),_SCS("get_modulate"));
 
 }
 

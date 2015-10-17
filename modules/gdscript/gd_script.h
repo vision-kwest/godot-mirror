@@ -260,6 +260,7 @@ friend class GDScriptLanguage;
 	Map<StringName,GDFunction> member_functions;
 	Map<StringName,MemberInfo> member_indices; //members are just indices to the instanced script.
 	Map<StringName,Ref<GDScript> > subclasses;	
+	Map<StringName,Vector<StringName> > _signals;
 
 #ifdef TOOLS_ENABLED
 
@@ -318,6 +319,9 @@ public:
 	const Map<StringName,GDFunction>& get_member_functions() const { return member_functions; }
 	const Ref<GDNativeClass>& get_native() const { return native; }
 
+	virtual bool has_script_signal(const StringName& p_signal) const;
+	virtual void get_script_signal_list(List<MethodInfo> *r_signals) const;
+
 
 	bool is_tool() const { return tool; }
 	Ref<GDScript> get_base() const;
@@ -344,6 +348,8 @@ public:
 	void set_script_path(const String& p_path) { path=p_path; } //because subclasses need a path too...
 	Error load_source_code(const String& p_path);
 	Error load_byte_code(const String& p_path);
+
+	Vector<uint8_t> get_as_byte_code() const;
 
 	virtual ScriptLanguage *get_language() const;
 
@@ -469,6 +475,19 @@ public:
     }
 
 
+	virtual Vector<StackInfo> debug_get_current_stack_info() {
+	    if (Thread::get_main_ID()!=Thread::get_caller_ID())
+		return Vector<StackInfo>();
+
+		Vector<StackInfo> csi;
+		csi.resize(_debug_call_stack_pos);
+		for(int i=0;i<_debug_call_stack_pos;i++) {
+			csi[_debug_call_stack_pos-i-1].line=_call_stack[i].line?*_call_stack[i].line:0;
+			csi[_debug_call_stack_pos-i-1].script=Ref<GDScript>(_call_stack[i].function->get_script());
+		}
+		return csi;
+	}
+
 	struct {
 
 		StringName _init;
@@ -538,7 +557,7 @@ public:
 class ResourceFormatLoaderGDScript : public ResourceFormatLoader {
 public:
 
-	virtual RES load(const String &p_path,const String& p_original_path="");
+	virtual RES load(const String &p_path,const String& p_original_path="",Error *r_error=NULL);
 	virtual void get_recognized_extensions(List<String> *p_extensions) const;
 	virtual bool handles_type(const String& p_type) const;
 	virtual String get_resource_type(const String &p_path) const;

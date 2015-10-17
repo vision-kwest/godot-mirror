@@ -199,6 +199,7 @@ public:
 
 	FUNC2(mesh_remove_surface,RID,int);
 	FUNC1RC(int,mesh_get_surface_count,RID);
+	FUNC1(mesh_clear,RID);
 
 
 	FUNC2(mesh_set_custom_aabb,RID,const AABB&);
@@ -626,6 +627,8 @@ public:
 	FUNC2(canvas_light_set_shadow_enabled,RID,bool);
 	FUNC2(canvas_light_set_shadow_buffer_size,RID,int);
 	FUNC2(canvas_light_set_shadow_esm_multiplier,RID,float);
+	FUNC2(canvas_light_set_shadow_color,RID,const Color&);
+
 
 
 	/* CANVAS OCCLUDER */

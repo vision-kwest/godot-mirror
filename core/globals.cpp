@@ -54,7 +54,7 @@ String Globals::localize_path(const String& p_path) const {
 	if (resource_path=="")
 		return p_path; //not initialied yet
 
-	if (p_path.begins_with("res://"))
+	if (p_path.find(":/") != -1)
 		return p_path.simplify_path();
 
 
@@ -1149,6 +1149,12 @@ Error Globals::_save_settings_text(const String& p_file,const Map<String,List<St
 
 	return OK;
 }
+
+Error Globals::_save_custom_bnd(const String &p_file) { // add other params as dictionary and array?
+
+	return save_custom(p_file);
+};
+
 Error Globals::save_custom(const String& p_path,const CustomMap& p_custom,const Set<String>& p_ignore_masks) {
 
 	ERR_FAIL_COND_V(p_path=="",ERR_INVALID_PARAMETER);
@@ -1321,7 +1327,7 @@ Vector<String> Globals::get_optimizer_presets() const {
 
 		if (!E->get().name.begins_with("optimizer_presets/"))
 			continue;
-		names.push_back(E->get().name.get_slice("/",1));
+		names.push_back(E->get().name.get_slicec('/',1));
 	}
 
 	names.sort();
@@ -1361,6 +1367,9 @@ void Globals::_bind_methods() {
 	ObjectTypeDB::bind_method(_MD("has_singleton"),&Globals::has_singleton);
 	ObjectTypeDB::bind_method(_MD("get_singleton"),&Globals::get_singleton_object);
 	ObjectTypeDB::bind_method(_MD("load_resource_pack"),&Globals::_load_resource_pack);
+
+	ObjectTypeDB::bind_method(_MD("save_custom"),&Globals::_save_custom_bnd);
+
 }
 
 Globals::Globals() {
@@ -1468,7 +1477,6 @@ Globals::Globals() {
 	custom_prop_info["render/mipmap_policy"]=PropertyInfo(Variant::INT,"render/mipmap_policy",PROPERTY_HINT_ENUM,"Allow,Allow For Po2,Disallow");
 	custom_prop_info["render/thread_model"]=PropertyInfo(Variant::INT,"render/thread_model",PROPERTY_HINT_ENUM,"Single-Unsafe,Single-Safe,Multi-Threaded");
 	custom_prop_info["physics_2d/thread_model"]=PropertyInfo(Variant::INT,"physics_2d/thread_model",PROPERTY_HINT_ENUM,"Single-Unsafe,Single-Safe,Multi-Threaded");
-	set("display/emulate_touchscreen",false);
 
 	using_datapack=false;
 }

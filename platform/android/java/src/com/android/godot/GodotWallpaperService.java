@@ -63,7 +63,7 @@ public class GodotWallpaperService extends GLWallpaperService {
 			io = new GodotIO(this);
 			io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
 			//GodotLib.io=GodotWallpaperService.this.io;
-			GodotLib.initializeWallpaper(this, !io.needsReloadHooks(), command_line);
+			GodotLib.initializeWallpaper(this, !io.needsReloadHooks(), command_line, getAssets());
 			Log.d("Godot", "GodotLib.initializeWallpaper()");
 			GodotLib.mIsInitialized = true;
 			
@@ -202,7 +202,7 @@ public class GodotWallpaperService extends GLWallpaperService {
 			GodotWallpaperService.this.io = new GodotIO(GodotWallpaperService.this);
 			GodotWallpaperService.this.io.unique_id = Secure.getString(GodotWallpaperService.this.getContentResolver(), Secure.ANDROID_ID);
 			//GodotLib.io=GodotWallpaperService.this.io;
-			GodotLib.initializeWallpaper(GodotWallpaperService.this, GodotWallpaperService.this.io.needsReloadHooks(), command_line);
+			GodotLib.initializeWallpaper(GodotWallpaperService.this, GodotWallpaperService.this.io.needsReloadHooks(), command_line, getAssets());
 			*/
 			
 			// Get sensormanager and register as listener.

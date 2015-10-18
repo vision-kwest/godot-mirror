@@ -917,14 +917,14 @@ static void _initialize_contex_wrapper(JNIEnv * env, jobject obj, jobject activi
 
 }
 
-JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdlinejobjectArray p_cmdline, jobject p_asset_manager) {
+JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdline, jobject p_asset_manager) {
 	ctx_wrapper_class = godot_class;
-	_initialize_contex_wrapper(env, obj, activity, p_need_reload_hook, p_cmdline);
+	_initialize_contex_wrapper(env, obj, activity, p_need_reload_hook, p_cmdline, p_asset_manager);
 }
 
-JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initializeWallpaper(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdlinejobjectArray p_cmdline, jobject p_asset_manager) {
+JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initializeWallpaper(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdline, jobject p_asset_manager) {
 	ctx_wrapper_class = godot_wallpaper_class;
-	_initialize_contex_wrapper(env, obj, activity, p_need_reload_hook, p_cmdline);
+	_initialize_contex_wrapper(env, obj, activity, p_need_reload_hook, p_cmdline, p_asset_manager);
 }
 
 JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_resize(JNIEnv * env, jobject obj,  jint width, jint height, jboolean reload) {

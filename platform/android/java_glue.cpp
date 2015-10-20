@@ -837,7 +837,14 @@ static void _initialize_contex_wrapper(JNIEnv * env, jobject obj, jobject activi
 		}
 
 		ThreadAndroid::make_default(jvm);
+#ifdef USE_JAVA_FILE_ACCESS
 		FileAccessJAndroid::setup(gob);
+#else
+
+		jobject amgr = env->NewGlobalRef(p_asset_manager);
+
+		FileAccessAndroid::asset_manager=AAssetManager_fromJava(env,amgr);
+#endif
 		DirAccessJAndroid::setup(gob);
 		AudioDriverAndroid::setup(gob);
 	}
@@ -1072,8 +1079,8 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 	};
 	if (step == 1) {
 		if (!Main::start()) {
-			print_line("Main::start()");
-			os_android->rasterizer->mesh_check();
+			//print_line("Main::start()");
+			//os_android->rasterizer->mesh_check();
 
 			input_mutex->unlock();
 			suspend_mutex->lock();
@@ -1081,8 +1088,8 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 		}
 
 		os_android->main_loop_begin();
-		print_line("os_android->main_loop_begin()");
-		os_android->rasterizer->mesh_check();
+		//print_line("os_android->main_loop_begin()");
+		//os_android->rasterizer->mesh_check();
 		++step;
 	}
 

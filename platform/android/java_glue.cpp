@@ -41,7 +41,6 @@
 #include "core/os/keyboard.h"
 #include "java_class_wrapper.h"
 #include "android/asset_manager_jni.h"
-#include "drivers/gles2/rasterizer_gles2.h"
 
 static JavaClassWrapper *java_class_wrapper=NULL;
 static OS_Android *os_android=NULL;
@@ -49,7 +48,6 @@ static OS_Android *os_android=NULL;
 char godot_class[] ="com/android/godot/Godot";
 char godot_wallpaper_class[] ="com/android/godot/GodotWallpaperService";
 char* ctx_wrapper_class = NULL;
-
 
 struct jvalret {
 
@@ -648,7 +646,6 @@ static bool initialized=false;
 static Mutex *input_mutex=NULL;
 static Mutex *suspend_mutex=NULL;
 static int step=0;
-static int frame=0;
 static bool resized=false;
 static bool resized_reload=false;
 static bool quit_request=false;
@@ -778,11 +775,6 @@ static void _initialize_contex_wrapper(JNIEnv * env, jobject obj, jobject activi
 
 	__android_log_print(ANDROID_LOG_INFO,"godot","**INIT EVENT! - %p\n",env);
 
-	if (p_need_reload_hook){
-		__android_log_print(ANDROID_LOG_INFO,"godot","RELOAD (TRUE)");
-	}else{
-		__android_log_print(ANDROID_LOG_INFO,"godot","RELOAD (FALSE)");
-	}
 
 	initialized=true;
 
@@ -908,13 +900,11 @@ static void _initialize_contex_wrapper(JNIEnv * env, jobject obj, jobject activi
 
 	__android_log_print(ANDROID_LOG_INFO,"godot","*****SETUP OK");
 
-	// Not important - BEGIN
 	//video driver is determined here, because once initialized, it cant be changed
 	String vd = Globals::get_singleton()->get("display/driver");
 
 
 	env->CallVoidMethod(_godot_instance, _on_video_init, (jboolean)true);
-	// Not important - END
 
 	__android_log_print(ANDROID_LOG_INFO,"godot","**START");
 
@@ -959,15 +949,6 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_newcontext(JNIEnv * env, 
 
 }
 
-JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_newcontext2(JNIEnv * env, jobject obj) {
-
-	__android_log_print(ANDROID_LOG_INFO,"godot","^_^_^_^_^ newcontext2 %lld\n",Thread::get_caller_ID());
-	if (os_android && step > 0) {
-
-		os_android->reload_gfx2();
-	}
-
-}
 
 JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_quit(JNIEnv * env, jobject obj) {
 
@@ -1051,25 +1032,13 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 	suspend_mutex->lock();
 	input_mutex->lock();
 	//first time step happens, initialize
-	
-/*	if (os_android->rasterizer){
-		print_line("**MESH CHECK ("+itos(frame)+")**");
-		os_android->rasterizer->mesh_check();
-	}else{
-		print_line("**MESH CHECK ("+itos(frame)+")** - NO RASTERIZER YET!!!");
-	}*/
-	frame++;
-	
-	
 	if (step == 0) {
 		// ugly hack to initialize the rest of the engine
 		// because of the way android forces you to do everything with threads
 
-		// Not important - BEGIN
 		java_class_wrapper = memnew( JavaClassWrapper(_godot_instance ));
 		Globals::get_singleton()->add_singleton(Globals::Singleton("JavaClassWrapper",java_class_wrapper));
 		_initialize_java_modules();
-		// Not important - END
 
 		Main::setup2();
 		++step;
@@ -1079,8 +1048,6 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 	};
 	if (step == 1) {
 		if (!Main::start()) {
-			//print_line("Main::start()");
-			//os_android->rasterizer->mesh_check();
 
 			input_mutex->unlock();
 			suspend_mutex->lock();
@@ -1088,8 +1055,6 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 		}
 
 		os_android->main_loop_begin();
-		//print_line("os_android->main_loop_begin()");
-		//os_android->rasterizer->mesh_check();
 		++step;
 	}
 

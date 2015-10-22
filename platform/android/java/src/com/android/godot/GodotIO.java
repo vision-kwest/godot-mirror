@@ -519,31 +519,31 @@ public class GodotIO {
 
 		return android.os.Build.VERSION.SDK_INT < 11;
 	}
-	/*
+
 	public void showKeyboard(String p_existing_text) {
 		if(edit != null)
 			edit.showKeyboard(p_existing_text);
 
-		//InputMethodManager inputMgr = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+		//InputMethodManager inputMgr = (InputMethodManager)ctx_wrapper.getSystemService(Context.INPUT_METHOD_SERVICE);
 		//inputMgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 	};
 
 	public void hideKeyboard() {
-		if(edit != null)
+		/*if(edit != null)
 			edit.hideKeyboard();
 
-        InputMethodManager inputMgr = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodManager inputMgr = (InputMethodManager)ctx_wrapper.getSystemService(Context.INPUT_METHOD_SERVICE);
         View v = activity.getCurrentFocus();
         if (v != null) {
             inputMgr.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         } else {
-            inputMgr.hideSoftInputFromWindow(new View(activity).getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-        }
+            inputMgr.hideSoftInputFromWindow(new View(ctx_wrapper).getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        }*/
 	};
 
 	public void setScreenOrientation(int p_orientation) {
 
-		switch(p_orientation) {
+		/*switch(p_orientation) {
 
 			case SCREEN_LANDSCAPE: {
 				activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -567,13 +567,13 @@ public class GodotIO {
 				activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
 			} break;
 
-		}
+		}*/
 	};
 	
 	public void setEdit(GodotEditText _edit) {
 		edit = _edit;
 	}
-	*/
+
 	public void playVideo(String p_path)
 	{
 		Uri filePath = Uri.parse(p_path);
@@ -670,96 +670,6 @@ public class GodotIO {
 	public String getUniqueID() {
 
 		return  unique_id;
-	}
-	
-	
-
-	public boolean isAnimating = false;
-	public boolean gotOffsetEvent(float  xOffset) {
-		float x_max = 767.0f;
-		int x = Math.round(xOffset*x_max);
-		int evcount = 1;
-		int[] arr= {0, x, 0};
-		
-		if (isAnimating == false){
-			Log.d("Godot", "evcount: START");
-		  // Button down
-		  GodotLib.touch(0,0,evcount,arr);
-		  isAnimating = true;
-		  // Move!
-		  GodotLib.touch(1,0,evcount,arr);
-		  Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
-		//}else if(xOffset == 0.0f || xOffset == 0.25f || xOffset == 0.5f || xOffset == 0.75f || xOffset == 1.0f){
-		}else if(x == 0 || x == 192 || x == 384 || x == 576 || x == 767){
-			// Move!
-			  GodotLib.touch(1,0,evcount,arr);
-			  Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
-			  // Button up
-			  GodotLib.touch(2,0,evcount,arr);
-				Log.d("Godot", "evcount: STOP");
-
-		}else{
-			// Move!
-		    GodotLib.touch(1,0,evcount,arr);	
-		    Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
-		    isAnimating = false;
-		}
-
-		return true;
-	}
-
-	
-	public boolean gotTouchEvent(MotionEvent event) {
-
-		//super.onTouchEvent(event);
-		int evcount=event.getPointerCount();
-		if (evcount==0)
-			return true;
-
-		int[] arr = new int[event.getPointerCount()*3];
-
-		for(int i=0;i<event.getPointerCount();i++) {
-
-			arr[i*3+0]=(int)event.getPointerId(i);
-			arr[i*3+1]=(int)event.getX(i);
-			arr[i*3+2]=(int)event.getY(i);
-		}
-
-		//System.out.printf("gaction: %d\n",event.getAction());
-		switch(event.getAction()&MotionEvent.ACTION_MASK) {
-
-			case MotionEvent.ACTION_DOWN: {
-				GodotLib.touch(0,0,evcount,arr);
-				//System.out.printf("action down at: %f,%f\n", event.getX(),event.getY());
-			} break;
-			case MotionEvent.ACTION_MOVE: {
-				GodotLib.touch(1,0,evcount,arr);
-				//Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
-				
-				//for(int i=0;i<event.getPointerCount();i++) {
-				//	System.out.printf("%d - moved to: %f,%f\n",i, event.getX(i),event.getY(i));
-				//}
-			} break;
-			case MotionEvent.ACTION_POINTER_UP: {
-				int pointer_idx = event.getActionIndex();
-				GodotLib.touch(4,pointer_idx,evcount,arr);
-				//System.out.printf("%d - s.up at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
-			} break;
-			case MotionEvent.ACTION_POINTER_DOWN: {
-				int pointer_idx = event.getActionIndex();
-				GodotLib.touch(3,pointer_idx,evcount,arr);
-				//System.out.printf("%d - s.down at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
-			} break;
-			case MotionEvent.ACTION_CANCEL:
-			case MotionEvent.ACTION_UP: {
-				GodotLib.touch(2,0,evcount,arr);
-				//for(int i=0;i<event.getPointerCount();i++) {
-				//	System.out.printf("%d - up! %f,%f\n",i, event.getX(i),event.getY(i));
-				//}
-			} break;
-
-		}
-		return true;
 	}
 
 }

@@ -1373,8 +1373,6 @@ public:
 	/* MESH API */
 
 	virtual RID mesh_create();
-	
-	virtual void mesh_check();
 
 	virtual void mesh_add_surface(RID p_mesh,VS::PrimitiveType p_primitive,const Array& p_arrays,const Array& p_blend_shapes=Array(),bool p_alpha_sort=false);
 	virtual Array mesh_get_surface_arrays(RID p_mesh,int p_surface) const;
@@ -1695,7 +1693,6 @@ public:
 
 	void set_use_framebuffers(bool p_use);
 	void reload_vram();
-	void reload_vram2();
 
 	virtual bool has_feature(VS::Features p_feature) const;
 	

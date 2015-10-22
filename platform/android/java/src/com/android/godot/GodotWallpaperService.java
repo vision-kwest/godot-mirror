@@ -19,6 +19,7 @@ import android.os.SystemClock;
 import android.provider.Settings.Secure;
 
 
+
 import  android.app.ActivityManager.MemoryInfo;
 
 
@@ -62,13 +63,18 @@ public class GodotWallpaperService extends GLWallpaperService {
 			command_line = new String[0];
 			io = new GodotIO(this);
 			io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-			//GodotLib.io=GodotWallpaperService.this.io;
+			GodotLib.io=io;
 			GodotLib.initializeWallpaper(this, !io.needsReloadHooks(), command_line, getAssets());
 			Log.d("Godot", "GodotLib.initializeWallpaper()");
 			GodotLib.mIsInitialized = true;
 			
-			io.gotOffsetEvent(0.5f); // init to center of screen
+			this.gotOffsetEvent(0.5f); // init to center of screen
 
+			/*queueEvent(new Runnable(){
+				public void run() {			
+					mRenderer.gotOffsetEvent(0.5f); // init to center of screen
+				}
+			});*/
 			
 			ActivityManager manager =  (ActivityManager) this.getApplicationContext().getSystemService(this.getApplicationContext().ACTIVITY_SERVICE);
 			List<RunningAppProcessInfo> activityes = ((ActivityManager)manager).getRunningAppProcesses();
@@ -84,6 +90,95 @@ public class GodotWallpaperService extends GLWallpaperService {
 		}
 	}
 
+	public boolean isAnimating = false;
+	public boolean gotOffsetEvent(float  xOffset) {
+		float x_max = 767.0f;
+		int x = Math.round(xOffset*x_max);
+		int evcount = 1;
+		int[] arr= {0, x, 0};
+		
+		if (isAnimating == false){
+			Log.d("Godot", "evcount: START");
+		  // Button down
+		  GodotLib.touch(0,0,evcount,arr);
+		  isAnimating = true;
+		  // Move!
+		  GodotLib.touch(1,0,evcount,arr);
+		  Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
+		//}else if(xOffset == 0.0f || xOffset == 0.25f || xOffset == 0.5f || xOffset == 0.75f || xOffset == 1.0f){
+		}else if(x == 0 || x == 192 || x == 384 || x == 576 || x == 767){
+			// Move!
+			  GodotLib.touch(1,0,evcount,arr);
+			  Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
+			  // Button up
+			  GodotLib.touch(2,0,evcount,arr);
+				Log.d("Godot", "evcount: STOP");
+
+		}else{
+			// Move!
+		    GodotLib.touch(1,0,evcount,arr);	
+		    Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
+		    isAnimating = false;
+		}
+
+		return true;
+	}
+
+	
+	public boolean gotTouchEvent(MotionEvent event) {
+
+		//super.onTouchEvent(event);
+		int evcount=event.getPointerCount();
+		if (evcount==0)
+			return true;
+
+		int[] arr = new int[event.getPointerCount()*3];
+
+		for(int i=0;i<event.getPointerCount();i++) {
+
+			arr[i*3+0]=(int)event.getPointerId(i);
+			arr[i*3+1]=(int)event.getX(i);
+			arr[i*3+2]=(int)event.getY(i);
+		}
+
+		//System.out.printf("gaction: %d\n",event.getAction());
+		switch(event.getAction()&MotionEvent.ACTION_MASK) {
+
+			case MotionEvent.ACTION_DOWN: {
+				GodotLib.touch(0,0,evcount,arr);
+				//System.out.printf("action down at: %f,%f\n", event.getX(),event.getY());
+			} break;
+			case MotionEvent.ACTION_MOVE: {
+				GodotLib.touch(1,0,evcount,arr);
+				//Log.d("Godot", "evcount: "+ evcount + " arr[0:2] =" + arr[0] + ", " + arr[1] + ", " + arr[2] );
+				
+				//for(int i=0;i<event.getPointerCount();i++) {
+				//	System.out.printf("%d - moved to: %f,%f\n",i, event.getX(i),event.getY(i));
+				//}
+			} break;
+			case MotionEvent.ACTION_POINTER_UP: {
+				int pointer_idx = event.getActionIndex();
+				GodotLib.touch(4,pointer_idx,evcount,arr);
+				//System.out.printf("%d - s.up at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
+			} break;
+			case MotionEvent.ACTION_POINTER_DOWN: {
+				int pointer_idx = event.getActionIndex();
+				GodotLib.touch(3,pointer_idx,evcount,arr);
+				//System.out.printf("%d - s.down at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
+			} break;
+			case MotionEvent.ACTION_CANCEL:
+			case MotionEvent.ACTION_UP: {
+				GodotLib.touch(2,0,evcount,arr);
+				//for(int i=0;i<event.getPointerCount();i++) {
+				//	System.out.printf("%d - up! %f,%f\n",i, event.getX(i),event.getY(i));
+				//}
+			} break;
+
+		}
+		return true;
+	}
+	
+	
 	public Engine onCreateEngine() {
 		//Log.d("Godot", "GodotWallpaperService.onCreateEngine()");
 		
@@ -108,10 +203,10 @@ public class GodotWallpaperService extends GLWallpaperService {
 			GodotLib.quit();
 			Log.d("Godot", "GodotLib.quit()");
 			//GodotLib.mIsInitialized = false;
-			super.onDestroy();
 			//Log.d("Godot", "GodotLib.step() - QUIT!");
 			//GodotLib.step(); // process the quit request
 		}
+		super.onDestroy();
 	}
 	
 	public void forceQuit() {
@@ -133,22 +228,13 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 		}
 
-		public void onOffsetsChanged(float xOffset, float yOffset, float xOffsetStep, float yOffsetStep, int xPixelOffset, int yPixelOffset){
-			super.onOffsetsChanged(xOffset,      yOffset,
-					               xOffsetStep,  yOffsetStep,
-					               xPixelOffset, yPixelOffset);
-			
-			Log.d("Godot", "xOffset: "+xOffset+" yOffset: "+yOffset);
-			Log.d("Godot", "xOffsetStep: "+xOffsetStep+" yOffsetStep: "+yOffsetStep);
-			Log.d("Godot", "xPixelOffset: "+xPixelOffset+" yPixelOffset: "+yPixelOffset);
-			
-			//long downTime = SystemClock.uptimeMillis();
-			//long eventTime = SystemClock.uptimeMillis()
-			//int action = MotionEvent.ACTION_MOVE
-			//MotionEvent event = MotionEvent.obtain(downTime, eventTime, action, x, y, pressure, size, metaState, xPrecision, yPrecision, deviceId, edgeFlags);
-			//io.gotTouchEvent(event);
-			io.gotOffsetEvent(xOffset);
-			
+		public void onOffsetsChanged(final float xOffset, float yOffset, float xOffsetStep, float yOffsetStep, int xPixelOffset, int yPixelOffset){
+			GodotWallpaperService.this.gotOffsetEvent(xOffset);
+			/*queueEvent(new Runnable(){
+				public void run() {			
+					mRenderer.gotOffsetEvent(xOffset);
+				}
+			});*/
 		}
 		
 		public void onDestroy() {
@@ -170,20 +256,16 @@ public class GodotWallpaperService extends GLWallpaperService {
 		}
 
 		boolean is_paused = false;
+
+
 		@Override
-		public void onTouchEvent(MotionEvent event) {
-			//Log.d("Godot", "GodotWallpaperService.MyEngine.onTouchEvent()");
-			super.onTouchEvent(event);	
-//			if (this.isPreview()){
-			  io.gotTouchEvent(event);
-//			}
-			/*
-			boolean is_button_down = MotionEvent.ACTION_DOWN == event.getActionMasked();
-			if (is_button_down){
-				togglePause(is_paused);
-				is_paused = !is_paused;
-			}
-			*/
+		public void onTouchEvent(final MotionEvent event) {
+			GodotWallpaperService.this.gotTouchEvent(event);
+			/*queueEvent(new Runnable(){
+				public void run() {
+					mRenderer.gotTouchEvent(event);
+				}
+			});*/
 		}
 
 		@Override

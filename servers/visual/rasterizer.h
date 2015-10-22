@@ -264,8 +264,6 @@ public:
 	
 	virtual RID mesh_create()=0;
 	
-	virtual void mesh_check(){}
-
 
 	virtual void mesh_add_surface(RID p_mesh,VS::PrimitiveType p_primitive,const Array& p_arrays,const Array& p_blend_shapes=Array(),bool p_alpha_sort=false)=0;
 	virtual Array mesh_get_surface_arrays(RID p_mesh,int p_surface) const=0;
@@ -1021,7 +1019,6 @@ public:
 	virtual bool needs_to_draw_next_frame() const=0;
 
 	virtual void reload_vram() {}
-	virtual void reload_vram2() {}
 
 	virtual bool has_feature(VS::Features p_feature) const=0;
 

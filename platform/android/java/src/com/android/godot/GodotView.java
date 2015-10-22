@@ -5,7 +5,7 @@
 /*                           GODOT ENGINE                                */
 /*                    http://www.godotengine.org                         */
 /*************************************************************************/
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2007-2015 Juan Linietsky, Ariel Manzur.                 */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -69,23 +69,20 @@ public class GodotView extends GLSurfaceView {
 	private static Context ctx;
 
 	private static GodotIO io;
-    /*
 	private static boolean firsttime=true;
-    */
 	private static boolean use_gl2=false;
 	private static boolean use_32=false;
 
 	private Godot activity;
 
-	//public GodotView(Context context,GodotIO p_io,boolean p_use_gl2, boolean p_use_32_bits, Godot p_activity) {
-	public GodotView(Context context,GodotIO p_io,boolean p_use_gl2, boolean p_use_32_bits) {
+	public GodotView(Context context,GodotIO p_io,boolean p_use_gl2, boolean p_use_32_bits, Godot p_activity) {
 		super(context);
 		ctx=context;
 		io=p_io;
 		use_gl2=p_use_gl2;
 		use_32=p_use_32_bits;
 
-		//activity = p_activity;
+		activity = p_activity;
 
 		if (!p_io.needsReloadHooks()) {
 			//will only work on SDK 11+!!
@@ -101,8 +98,8 @@ public class GodotView extends GLSurfaceView {
     }
 
 	@Override public boolean onTouchEvent (MotionEvent event) {
-		super.onTouchEvent(event);
-		return io.gotTouchEvent(event);
+
+		return activity.gotTouchEvent(event);
 	};
 
 	public int get_godot_button(int keyCode) {
@@ -384,7 +381,7 @@ public class GodotView extends GLSurfaceView {
 		}
 
 		/* Set the renderer responsible for frame rendering */
-		setRenderer(new GodotRenderer());
+		setRenderer(new Renderer());
 	}
 
 	private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
@@ -618,7 +615,6 @@ public class GodotView extends GLSurfaceView {
 		private int[] mValue = new int[1];
 	}
 
-    /*
 	private static class Renderer implements GLSurfaceView.Renderer {
 
 
@@ -642,5 +638,4 @@ public class GodotView extends GLSurfaceView {
 			GodotLib.newcontext();
 		}
 	}
-	*/
 }

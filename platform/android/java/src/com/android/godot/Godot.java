@@ -244,10 +244,9 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 
 	public void onVideoInit(boolean use_gl2) {
 
-		//mView = new GodotView(getApplication(),io,use_gl2);
-		//setContentView(mView);
+//		mView = new GodotView(getApplication(),io,use_gl2);
+//		setContentView(mView);
 
-		/*
 		layout = new FrameLayout(this);
 		layout.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		setContentView(layout);
@@ -269,7 +268,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 		adLayout = new RelativeLayout(this);
 		adLayout.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		layout.addView(adLayout);
-		*/
+		
 	}
 
 	private static Godot _self;
@@ -350,9 +349,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 
 		io = new GodotIO(this);
 		io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-		/*
 		GodotLib.io=io;
-		*/
 		Log.d("GODOT", "command_line is null? " + ((command_line == null)?"yes":"no"));
 		/*if(command_line != null){
 		    Log.d("GODOT", "Command Line:");
@@ -720,7 +717,6 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 	}
 
 	//@Override public boolean dispatchTouchEvent (MotionEvent event) {
-	/*
 	public boolean gotTouchEvent(MotionEvent event) {
 
 		super.onTouchEvent(event);
@@ -772,7 +768,6 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 		}
 		return true;
 	}
-	*/
 
 	@Override public boolean onKeyMultiple(final int inKeyCode, int repeatCount, KeyEvent event) {
 		String s = event.getCharacters();

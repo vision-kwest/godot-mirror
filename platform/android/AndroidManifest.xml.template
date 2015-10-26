@@ -20,7 +20,7 @@
         <application android:debuggable="false" android:label="@string/godot_project_name_string" android:icon="@drawable/icon" android:allowBackup="false">
     -->
 
-    <application android:label="@string/godot_project_name_string" android:icon="@drawable/icon" android:allowBackup="false">
+    <application android:debuggable="true" android:label="@string/godot_project_name_string" android:icon="@drawable/icon" android:allowBackup="false">
     
         <!--
         <activity android:name="com.android.godot.Godot"
@@ -50,7 +50,7 @@
         </activity>
 
 		<service
-	            android:name="com.android.godot.GodotWallpaperService"
+	            android:name="com.android.godot.GodotWallpaperService2"
 	            android:enabled="true"
                 android:label="@string/godot_project_name_string"
 	            android:permission="android.permission.BIND_WALLPAPER" >

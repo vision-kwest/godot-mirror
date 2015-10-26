@@ -25,7 +25,7 @@ public class MainSetWallpaperActivity extends Activity {
 	  public void launchWallpaperPreview() {
 		    Intent intent = new Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER);
 		    intent.putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-		        new ComponentName(this, GodotWallpaperService.class));
+		        new ComponentName(this, GodotWallpaperService2.class));
 		    startActivity(intent);
 	  }
 }

@@ -47,6 +47,7 @@ static OS_Android *os_android=NULL;
 
 char godot_class[] ="com/android/godot/Godot";
 char godot_wallpaper_class[] ="com/android/godot/GodotWallpaperService";
+char godot_wallpaper_class2[] ="com/android/godot/GodotWallpaperService2";
 char* ctx_wrapper_class = NULL;
 
 struct jvalret {
@@ -921,6 +922,11 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, 
 
 JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initializeWallpaper(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdline, jobject p_asset_manager) {
 	ctx_wrapper_class = godot_wallpaper_class;
+	_initialize_contex_wrapper(env, obj, activity, p_need_reload_hook, p_cmdline, p_asset_manager);
+}
+
+JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initializeWallpaper2(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdline, jobject p_asset_manager) {
+	ctx_wrapper_class = godot_wallpaper_class2;
 	_initialize_contex_wrapper(env, obj, activity, p_need_reload_hook, p_cmdline, p_asset_manager);
 }
 

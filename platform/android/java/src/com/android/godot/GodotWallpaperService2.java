@@ -17,6 +17,9 @@ import javax.microedition.khronos.opengles.GL10;
 import android.util.Log;
 
 public class GodotWallpaperService2 extends GLWallpaperService2 {
+	static public GodotIO io;
+	public boolean godot_initialized=false;
+
     @Override
     public Engine onCreateEngine() {
 		Log.d("Godot", "GodotWallpaperService2::onCreateEngine()");
@@ -27,6 +30,7 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
     //private static class Renderer implements GLSurfaceView.Renderer {
     class WallpaperRenderer implements Renderer {
     	public int step_count = 0; // for debug
+    	private boolean firsttime=true;
 
 		public void onDrawFrame(GL10 gl) {
 			if (step_count % 100 == 0) Log.d("Godot", "GodotLib::step(): "+step_count);
@@ -50,6 +54,18 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
     
  
     class GodotWallpaperEngine extends GLWallpaperService2.GLEngine {
+    	private String[] command_line;
+    	
+    	private void initializeGodot() {
+    		Log.d("Godot", "GodotWallpaperEngine::initializeGodot()");
+    		
+			io = new GodotIO(GodotWallpaperService2.this);
+			io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+			GodotLib.io=io;
+			Log.d("Godot", "GodotLib::initializeWallpaper2()");
+			GodotLib.initializeWallpaper2(GodotWallpaperService2.this,io.needsReloadHooks(),command_line,getAssets());
+			GodotWallpaperService2.this.godot_initialized=true;
+    	}
  
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
@@ -74,7 +90,7 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
                 // leaving and resuming the live wallpaper.
                 setPreserveEGLContextOnPause(true);
                 
-                GodotWallpaperService2.this.initializeGodot(); // Now that there is a surface init!
+                this.initializeGodot(); // Now that there is a surface init!
                 
                 // Set the renderer to our user-defined renderer.
                 setRenderer(getNewRenderer());
@@ -122,31 +138,8 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
     
     
     
-    /////////////////////
-    // GODOT FUNCTIONS //
-    /////////////////////
-	static public GodotIO io;
-	private static boolean firsttime=true;	
-	public boolean godot_initialized=false;  // made public so Engine can see
-	private String[] command_line;
-	private void initializeGodot() {
-		Log.d("Godot", "GodotWallpaperService2::initializeGodot()");
-		if (!godot_initialized){ // there may be numorous Engines calling this but only init once Godot is global
-			io = new GodotIO(this);
-			io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-			GodotLib.io=io;
-			Log.d("Godot", "GodotLib::initializeWallpaper2()");
-			GodotLib.initializeWallpaper2(this,io.needsReloadHooks(),command_line,getAssets());
-			godot_initialized=true;
-		}
-	}
-	
 	public void onDestroy(){
 		Log.d("Godot", "GodotWallpaperService2::onDestroy()");
-		if (godot_initialized){
-			Log.d("Godot", "GodotLib::quit()");
-			GodotLib.quit();
-		}
 		super.onDestroy();
 	}
 

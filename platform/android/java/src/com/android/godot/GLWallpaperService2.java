@@ -42,7 +42,7 @@ public abstract class GLWallpaperService2 extends WallpaperService {
 		private static final String TAG = "GLEngine";
 
 		private WallpaperGLSurfaceView glSurfaceView;
-		public boolean rendererHasBeenSet;  // made public so WallpaperService can see
+		public boolean rendererHasBeenSet = false;  // made public so WallpaperService can see
 		 
 		@Override
 		public void onCreate(SurfaceHolder surfaceHolder) {

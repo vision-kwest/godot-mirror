@@ -81,14 +81,22 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
     	public int engine_id = -1;
     	
     	private void initializeGodot() {
-    		Log.d("Godot", "GodotWallpaperEngine::initializeGodot()");
-    		
-			io = new GodotIO(GodotWallpaperService2.this);
-			io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-			GodotLib.io=io;
-			Log.d("Godot", "GodotLib::initializeWallpaper2()");
-			GodotLib.initializeWallpaper2(GodotWallpaperService2.this,io.needsReloadHooks(),command_line,getAssets());
-			GodotWallpaperService2.this.godot_initialized=true;
+    		if (!GodotWallpaperService2.this.godot_initialized){
+	    		Log.d("Godot", "GodotWallpaperEngine::initializeGodot()");
+	    		
+				io = new GodotIO(GodotWallpaperService2.this);
+				io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+				GodotLib.io=io;
+				Log.d("Godot", "GodotLib::initializeWallpaper2()");
+				boolean use_reload_hooks = true; // even when droid sdk < 11
+				GodotLib.initializeWallpaper2(GodotWallpaperService2.this,use_reload_hooks,command_line,getAssets());
+				GodotWallpaperService2.this.godot_initialized=true;
+    		}else{
+    			Log.d("Godot", "GodotWallpaperEngine::initializeGodot() -- SKIPPED");
+    			// Godot Engine is a singleton so we only call initialize() once.
+    			// If it is used in a new context,
+    			// we call newcontext()
+    		}
     	}
  
         @Override
@@ -138,7 +146,7 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
         /////////////////////
 		@Override
 		public void onVisibilityChanged(boolean visible) {
-			Log.d("Godot", "GodotWallpaperEngine::onVisibilityChanged( "+ this.engine_id +" )");
+			Log.d("Godot", "GodotWallpaperEngine::onVisibilityChanged( "+ this.engine_id + ", " + visible + " )");
 
 		    super.onVisibilityChanged(visible);
 

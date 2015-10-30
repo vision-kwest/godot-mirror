@@ -16,16 +16,18 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import android.util.Log;
 
+import java.util.concurrent.Semaphore;
+
 public class GodotWallpaperService2 extends GLWallpaperService2 {
 	static public GodotIO io;
 	public boolean godot_initialized=false;
 	
 	public static int engine_count = 0;
 	public static int renderer_count = 0;
-
 	
-	public int curr_engine_id   = -1;
-	public int curr_renderer_id = -1;
+	public Semaphore godot_lock = new Semaphore(1);	
+	public int focus_count = 0;
+
 
     @Override
     public Engine onCreateEngine() {
@@ -41,25 +43,30 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
     	public int renderer_id = -1;
     	   	
 		public void onDrawFrame(GL10 gl) {
-		    if (GodotWallpaperService2.this.curr_renderer_id == this.renderer_id){
-				//if (step_count % 100 == 0) Log.d("Godot", "GodotLib::step(): "+step_count);
-				if (step_count % 1 == 0) Log.d("Godot", "GodotLib::step(): "+step_count);
-				GodotLib.step();
-				step_count++;
-		    }else{
-				Log.d("Godot", "WallpaperRenderer::onDrawFrame() -- SKIPPED( "+ this.renderer_id +" )");		    	
-		    }
+			if (step_count % 100 == 0) Log.d("Godot", "GodotLib::step(): "+step_count);
+			try {
+				godot_lock.acquire();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			GodotLib.step();
+			godot_lock.release();
+			step_count++;
 		}
 
 		public void onSurfaceChanged(GL10 gl, int width, int height) {
-		    if (GodotWallpaperService2.this.curr_renderer_id == this.renderer_id){
-				Log.d("Godot", "WallpaperRenderer::onSurfaceChanged()");
-				Log.d("Godot", "GodotLib::resize()");
-				GodotLib.resize(width, height,!firsttime);
-				firsttime=false;
-		    }else{
-				Log.d("Godot", "WallpaperRenderer::onDrawFrame() -- SKIPPED( "+ this.renderer_id +" )");		    	
-		    }
+			Log.d("Godot", "WallpaperRenderer::onSurfaceChanged()");
+			Log.d("Godot", "GodotLib::resize()");
+			try {
+				godot_lock.acquire();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			GodotLib.resize(width, height,!firsttime);
+			godot_lock.release();
+			firsttime=false;
 		}
 
 		public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -67,11 +74,16 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
 			Log.d("Godot", "GodotLib::newcontext()");
 			
 			this.renderer_id = GodotWallpaperService2.renderer_count;
-			GodotWallpaperService2.this.curr_renderer_id = this.renderer_id;
 			GodotWallpaperService2.renderer_count++;
 			Log.d("Godot", "renderer_id: " + this.renderer_id);
-			
+			try {
+				godot_lock.acquire();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
 			GodotLib.newcontext();
+			godot_lock.release();
 		}
 	}    
     
@@ -103,7 +115,6 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
         public void onCreate(SurfaceHolder surfaceHolder) {
 			
 			this.engine_id = GodotWallpaperService2.engine_count;
-			GodotWallpaperService2.this.curr_engine_id = this.engine_id;
 			GodotWallpaperService2.engine_count++;
 			Log.d("Godot", "engine_id: " + this.engine_id);
 
@@ -146,26 +157,46 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
         /////////////////////
 		@Override
 		public void onVisibilityChanged(boolean visible) {
-			Log.d("Godot", "GodotWallpaperEngine::onVisibilityChanged( "+ this.engine_id + ", " + visible + " )");
+			Log.d("Godot", "GodotWallpaperEngine::onVisibilityChanged( "+ this.engine_id + ", " + visible + ", [" + GodotWallpaperService2.this.focus_count +"] )");
 
 		    super.onVisibilityChanged(visible);
 
-		    if (GodotWallpaperService2.this.curr_engine_id == this.engine_id){
-			    if (rendererHasBeenSet && GodotWallpaperService2.this.godot_initialized ) {
-			        if (visible) {
-			            // Associated wih onResume()
+		    if (rendererHasBeenSet && GodotWallpaperService2.this.godot_initialized ) {
+		        if (visible) {
+		            // Associated wih onResume()
+					if (focus_count == 0){ // handle overlapping calls to focusin()/focusout()
 						Log.d("Godot", "GodotLib::focusin( "+ this.engine_id +" )");
-			    		GodotLib.focusin();
-			        } else {
-			            // Associated with onPause()
-						Log.d("Godot", "GodotLib::focusout( "+ this.engine_id +" )");
-			    		GodotLib.focusout();
-			        }
-			    }else{
-					Log.d("Godot", "GodotWallpaperEngine::onVisibilityChanged( "+ this.engine_id +" ) -- SKIPPED( "+ rendererHasBeenSet +" && " + GodotWallpaperService2.this.godot_initialized + " )");		    			    	
-			    }
+						try {
+							godot_lock.acquire();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						GodotLib.focusin();
+						godot_lock.release();
+					}else{
+						Log.d("Godot", "GodotLib::focusin( "+ this.engine_id +" ) -- SKIPPED COUNT: "+ GodotWallpaperService2.this.focus_count);
+					}
+					GodotWallpaperService2.this.focus_count++; // track every request to resume
+		        } else {
+		            // Associated with onPause()
+		        	GodotWallpaperService2.this.focus_count--; // track every request to pause
+		    		if (GodotWallpaperService2.this.focus_count == 0){ // handle overlapping calls to focusin()/focusout()
+		    			Log.d("Godot", "GodotLib::focusout( "+ this.engine_id +" )");
+						try {
+							godot_lock.acquire();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		    			GodotLib.focusout();
+						godot_lock.release();
+		    		}else{
+						Log.d("Godot", "GodotLib::focusout( "+ this.engine_id +" ) -- SKIPPED COUNT: "+ GodotWallpaperService2.this.focus_count);
+		    		}
+		        }
 		    }else{
-				Log.d("Godot", "GodotWallpaperEngine::onVisibilityChanged() -- SKIPPED( "+ this.engine_id +" )");		    	
+				Log.d("Godot", "GodotWallpaperEngine::onVisibilityChanged( "+ this.engine_id +" ) -- SKIPPED( "+ rendererHasBeenSet +" && " + GodotWallpaperService2.this.godot_initialized + " )");		    			    	
 		    }
 		}
         
@@ -183,10 +214,17 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
 	public void onDestroy(){
 		Log.d("Godot", "GodotWallpaperService2::onDestroy()");
 		if (GodotWallpaperService2.this.godot_initialized){
+			try {
+				godot_lock.acquire();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			Log.d("Godot", "GodotLib::quit()");
 			GodotLib.quit();
 			Log.d("Godot", "GodotLib::step()");
 			GodotLib.step();
+			godot_lock.release();
 		}
 		super.onDestroy();
 	}

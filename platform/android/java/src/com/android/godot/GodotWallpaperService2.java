@@ -35,59 +35,6 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
         return new GodotWallpaperEngine();
     }
     
-    
-    //private static class Renderer implements GLSurfaceView.Renderer {
-    class WallpaperRenderer implements Renderer {
-    	public int step_count = 0; // for debug
-    	private boolean firsttime=true;
-    	public int renderer_id = -1;
-    	   	
-		public void onDrawFrame(GL10 gl) {
-			if (step_count % 100 == 0) Log.d("Godot", "GodotLib::step(): "+step_count);
-			try {
-				godot_lock.acquire();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			GodotLib.step();
-			godot_lock.release();
-			step_count++;
-		}
-
-		public void onSurfaceChanged(GL10 gl, int width, int height) {
-			Log.d("Godot", "WallpaperRenderer::onSurfaceChanged()");
-			Log.d("Godot", "GodotLib::resize()");
-			try {
-				godot_lock.acquire();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			GodotLib.resize(width, height,!firsttime);
-			godot_lock.release();
-			firsttime=false;
-		}
-
-		public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-			Log.d("Godot", "WallpaperRenderer::onSurfaceCreated()");
-			Log.d("Godot", "GodotLib::newcontext()");
-			
-			this.renderer_id = GodotWallpaperService2.renderer_count;
-			GodotWallpaperService2.renderer_count++;
-			Log.d("Godot", "renderer_id: " + this.renderer_id);
-			try {
-				godot_lock.acquire();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}			
-			GodotLib.newcontext();
-			godot_lock.release();
-		}
-	}    
-    
- 
     class GodotWallpaperEngine extends GLWallpaperService2.GLEngine {
     	private String[] command_line;
     	public int engine_id = -1;
@@ -206,7 +153,7 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
     Renderer getNewRenderer() {
 		Log.d("Godot", "GodotWallpaperService2::getNewRenderer()");
         //return new LessonOneRenderer();
-        return new WallpaperRenderer();        
+        return new WallpaperRenderer(GodotWallpaperService2.this.godot_lock);        
     }
     
     

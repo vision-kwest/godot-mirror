@@ -66,25 +66,22 @@ public class GodotView extends GLSurfaceView {
 
 	private static String TAG = "GodotView";
 	private static final boolean DEBUG = false;
-	private static Context ctx;
 
-	private static GodotIO io;
 	private static boolean firsttime=true;
 	private static boolean use_gl2=false;
 	private static boolean use_32=false;
 
-	private Godot activity;
+	private GodotHelper godot_helper;
+	private GLSurfaceView.Renderer renderer;
 
-	public GodotView(Context context,GodotIO p_io,boolean p_use_gl2, boolean p_use_32_bits, Godot p_activity) {
+	public GodotView(Context context, boolean p_use_gl2, boolean p_use_32_bits, GodotHelper p_godot_helper, GLSurfaceView.Renderer p_renderer) {
 		super(context);
-		ctx=context;
-		io=p_io;
 		use_gl2=p_use_gl2;
 		use_32=p_use_32_bits;
+		godot_helper = p_godot_helper;
+		renderer = p_renderer;
 
-		activity = p_activity;
-
-		if (!p_io.needsReloadHooks()) {
+		if (!(android.os.Build.VERSION.SDK_INT < 11)) {
 			//will only work on SDK 11+!!
 			setPreserveEGLContextOnPause(true);
 		}
@@ -99,7 +96,7 @@ public class GodotView extends GLSurfaceView {
 
 	@Override public boolean onTouchEvent (MotionEvent event) {
 
-		return activity.gotTouchEvent(event);
+		return godot_helper.gotTouchEvent(event);
 	};
 
 	public int get_godot_button(int keyCode) {
@@ -381,7 +378,7 @@ public class GodotView extends GLSurfaceView {
 		}
 
 		/* Set the renderer responsible for frame rendering */
-		setRenderer(new Renderer());
+		setRenderer(renderer);
 	}
 
 	private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
@@ -615,7 +612,7 @@ public class GodotView extends GLSurfaceView {
 		private int[] mValue = new int[1];
 	}
 
-	private static class Renderer implements GLSurfaceView.Renderer {
+	public static class Renderer implements GLSurfaceView.Renderer {
 
 
 		public void onDrawFrame(GL10 gl) {

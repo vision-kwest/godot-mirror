@@ -67,6 +67,7 @@ import java.io.IOException;
 import android.provider.Settings.Secure;
 import android.widget.FrameLayout;
 
+import com.android.godot.GodotView.Renderer;
 import com.android.godot.input.*;
 
 import java.io.InputStream;
@@ -90,7 +91,7 @@ import android.os.Messenger;
 import android.os.SystemClock;
 
 
-public class Godot extends Activity implements SensorEventListener, IDownloaderClient
+public class Godot extends Activity implements SensorEventListener, IDownloaderClient, GodotHelper
 {	
 
 	static final int MAX_SINGLETONS = 64;
@@ -257,7 +258,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
         // ...add to FrameLayout
 		   layout.addView(edittext);
 		
-		mView = new GodotView(getApplication(),io,use_gl2,use_32_bits, this);
+		mView = new GodotView(getApplication(),use_gl2,use_32_bits, this, new Renderer());
 		layout.addView(mView,new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		mView.setKeepScreenOn(true);
 		

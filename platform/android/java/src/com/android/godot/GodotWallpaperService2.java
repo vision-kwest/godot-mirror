@@ -1,11 +1,14 @@
 package com.android.godot;
 
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.app.ActivityManager;
 import android.content.pm.ConfigurationInfo;
+import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.content.Context;
 import com.android.godot.LessonOneRenderer;
+import com.android.godot.GLWallpaperService2.GLEngine.WallpaperGLSurfaceView;
 import com.android.godot.GLWallpaperService2;
 
 ///////////////////
@@ -18,7 +21,7 @@ import android.util.Log;
 
 import java.util.concurrent.Semaphore;
 
-public class GodotWallpaperService2 extends GLWallpaperService2 {
+public class GodotWallpaperService2 extends GLWallpaperService2 implements GodotHelper{
 	static public GodotIO io;
 	public boolean godot_initialized=false;
 	
@@ -66,38 +69,16 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
 			Log.d("Godot", "engine_id: " + this.engine_id);
 
             super.onCreate(surfaceHolder);
- 
-            // Check if the system supports OpenGL ES 2.0.
-            final ActivityManager activityManager =
-                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            final ConfigurationInfo configurationInfo =
-                activityManager.getDeviceConfigurationInfo();
-            final boolean supportsEs2 =
-                configurationInfo.reqGlEsVersion >= 0x20000;
- 
-            if (supportsEs2)
-            {
-                // Request an OpenGL ES 2.0 compatible context.
-                setEGLContextClientVersion(2);
- 
-                // On Honeycomb+ devices, this improves the performance when
-                // leaving and resuming the live wallpaper.
-                setPreserveEGLContextOnPause(true);
-                
-                this.initializeGodot(); // Now that there is a surface init!
-                
-                // Set the renderer to our user-defined renderer.
-                setRenderer(getNewRenderer());
-            }
-            else
-            {
-                // This is where you could create an OpenGL ES 1.x compatible
-                // renderer if you wanted to support both ES 1 and ES 2.
-                return;
-            }
+            this.initializeGodot(); // Now that there is a surface init!
         }        
         
         
+		public WallpaperGLSurfaceView getGLSurfaceView(){
+		    boolean use_gl2 = true;
+		    boolean use_32_bits=false;
+		    GLSurfaceView.Renderer renderer = new WallpaperRenderer(godot_lock);
+		    return new WallpaperGLSurfaceView(GodotWallpaperService2.this, use_gl2, use_32_bits, GodotWallpaperService2.this, renderer);
+		}
         
         /////////////////////
         // GODOT FUNCTIONS //
@@ -186,6 +167,12 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
 		// Godot callback that does the real quitting. Is called by step() after quit().
 		System.exit(0);
 	}
+
+	@Override
+	public boolean gotTouchEvent(MotionEvent event) {
+		// TODO Auto-generated method stub
+		return false;
+    }
     
 }
 

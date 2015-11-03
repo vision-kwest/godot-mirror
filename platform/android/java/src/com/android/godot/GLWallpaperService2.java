@@ -3,8 +3,10 @@ package com.android.godot;
 import android.service.wallpaper.WallpaperService;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.util.Log;
 
 
@@ -15,13 +17,14 @@ import android.util.Log;
  * app drawer. It's a GUI window-less Activity that kills itself in onCreate().
  */
 public abstract class GLWallpaperService2 extends WallpaperService {
-	public class GLEngine extends Engine {
+	public abstract class GLEngine extends Engine {
 	
-		class WallpaperGLSurfaceView extends GLSurfaceView {
+		class WallpaperGLSurfaceView extends GodotView {
 		    private static final String TAG = "WallpaperGLSurfaceView";
 		 
-		    WallpaperGLSurfaceView(Context context) {
-		        super(context);
+		    WallpaperGLSurfaceView(Context context,boolean p_use_gl2, boolean p_use_32_bits, GodotHelper p_godot_helper, GLSurfaceView.Renderer p_renderer) {
+		        super(context, p_use_gl2, p_use_32_bits, p_godot_helper, p_renderer);
+			    rendererHasBeenSet = true; // onVisibilityChanged() needs to know when to start toggling the renderer
 				Log.d("Godot", "WallpaperGLSurfaceView::WallpaperGLSurfaceView()");
 		    }
 		 
@@ -48,8 +51,10 @@ public abstract class GLWallpaperService2 extends WallpaperService {
 		public void onCreate(SurfaceHolder surfaceHolder) {
 			Log.d("Godot", "GLEngine::onCreate()");
 		    super.onCreate(surfaceHolder);
-		    glSurfaceView = new WallpaperGLSurfaceView(GLWallpaperService2.this);
+		    glSurfaceView = getGLSurfaceView();
 		}
+		
+		public abstract WallpaperGLSurfaceView getGLSurfaceView();
 		
 		@Override
 		public void onVisibilityChanged(boolean visible) {
@@ -72,12 +77,6 @@ public abstract class GLWallpaperService2 extends WallpaperService {
 		    glSurfaceView.onDestroy();
 		}
 		
-		protected void setRenderer(Renderer renderer) {
-			Log.d("Godot", "GLEngine::setRenderer()");
-			glSurfaceView.setEGLConfigChooser(8 , 8, 8, 8, 16, 0); // added to get drawing in emulator
-			glSurfaceView.setRenderer(renderer);
-		    rendererHasBeenSet = true;
-		}
 		 
 		protected void setEGLContextClientVersion(int version) {
 			Log.d("Godot", "GLEngine::setEGLContextClientVersion()");

@@ -3,17 +3,15 @@ package com.android.godot;
 import android.view.SurfaceHolder;
 import android.app.ActivityManager;
 import android.content.pm.ConfigurationInfo;
+import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.content.Context;
-import com.android.godot.LessonOneRenderer;
 import com.android.godot.GLWallpaperService2;
 
 ///////////////////
 // GODOT IMPORTS //
 ///////////////////
 import android.provider.Settings.Secure;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 import android.util.Log;
 
 import java.util.concurrent.Semaphore;
@@ -36,6 +34,19 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
     }
     
     class GodotWallpaperEngine extends GLWallpaperService2.GLEngine {
+    	
+        class GodotSufaceView extends WallpaperGLSurfaceView {
+        	GodotSufaceView(Context context, boolean p_use_gl2, boolean p_use_32_bits, boolean p_needs_reload) {
+		        super(context,p_use_gl2, p_use_32_bits, p_needs_reload);
+				Log.d("Godot", "GodotSufaceView::GodotSufaceView()");
+		    }
+        	
+		    GLSurfaceView.Renderer getDefaultRenderer(){
+			    GLSurfaceView.Renderer renderer = new WallpaperRenderer(godot_lock);
+			    return renderer;
+		    }
+        }
+	
     	private String[] command_line;
     	public int engine_id = -1;
     	
@@ -66,39 +77,16 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
 			Log.d("Godot", "engine_id: " + this.engine_id);
 
             super.onCreate(surfaceHolder);
- 
-            // Check if the system supports OpenGL ES 2.0.
-            final ActivityManager activityManager =
-                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-            final ConfigurationInfo configurationInfo =
-                activityManager.getDeviceConfigurationInfo();
-            final boolean supportsEs2 =
-                configurationInfo.reqGlEsVersion >= 0x20000;
- 
-            if (supportsEs2)
-            {
-                // Request an OpenGL ES 2.0 compatible context.
-                setEGLContextClientVersion(2);
- 
-                // On Honeycomb+ devices, this improves the performance when
-                // leaving and resuming the live wallpaper.
-                setPreserveEGLContextOnPause(true);
-                
-                this.initializeGodot(); // Now that there is a surface init!
-                
-                // Set the renderer to our user-defined renderer.
-                setRenderer(getNewRenderer());
-            }
-            else
-            {
-                // This is where you could create an OpenGL ES 1.x compatible
-                // renderer if you wanted to support both ES 1 and ES 2.
-                return;
-            }
+            this.initializeGodot(); // Now that there is a surface init!
         }        
         
-        
-        
+		public WallpaperGLSurfaceView getGLSurfaceView(){
+		    boolean use_gl2 = true;
+		    boolean use_32_bits=true; // setting this to 'true' so we get a emulator friendly surface
+		    boolean use_reload=GodotIO.needsReloadHooks();
+		    return new GodotSufaceView(GodotWallpaperService2.this, use_gl2, use_32_bits, use_reload);
+		}
+		
         /////////////////////
         // GODOT FUNCTIONS //
         /////////////////////
@@ -186,6 +174,12 @@ public class GodotWallpaperService2 extends GLWallpaperService2 {
 		// Godot callback that does the real quitting. Is called by step() after quit().
 		System.exit(0);
 	}
-    
+    public boolean isOpenGLES2Supported() {
+		// Check if the system supports OpenGL ES 2.0.
+		final ActivityManager activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
+		final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
+		final boolean supportsEs2 = configurationInfo.reqGlEsVersion >= 0x20000;
+		return supportsEs2;
+    }	
 }
 

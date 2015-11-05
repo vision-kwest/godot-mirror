@@ -2,7 +2,6 @@ package com.android.godot;
 
 import android.service.wallpaper.WallpaperService;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.Renderer;
 import android.view.SurfaceHolder;
 import android.content.Context;
 import android.util.Log;
@@ -15,13 +14,14 @@ import android.util.Log;
  * app drawer. It's a GUI window-less Activity that kills itself in onCreate().
  */
 public abstract class GLWallpaperService2 extends WallpaperService {
-	public class GLEngine extends Engine {
 	
-		class WallpaperGLSurfaceView extends GLSurfaceView {
+	public abstract class GLEngine extends Engine {
+	
+		public abstract class  WallpaperGLSurfaceView extends GLBaseView {
 		    private static final String TAG = "WallpaperGLSurfaceView";
 		 
-		    WallpaperGLSurfaceView(Context context) {
-		        super(context);
+		    WallpaperGLSurfaceView(Context context, boolean p_use_gl2, boolean p_use_32_bits, boolean p_needs_reload) {
+		        super(context,p_use_gl2, p_use_32_bits, p_needs_reload);
 				Log.d("Godot", "WallpaperGLSurfaceView::WallpaperGLSurfaceView()");
 		    }
 		 
@@ -36,6 +36,9 @@ public abstract class GLWallpaperService2 extends WallpaperService {
 				Log.d("Godot", "WallpaperGLSurfaceView::onDestroy()");
 		        super.onDetachedFromWindow();
 		    }
+
+		    // Require derived classes to hardcode the creation of a default renderer
+		    abstract GLSurfaceView.Renderer getDefaultRenderer();
 		}
 		
 		
@@ -48,15 +51,17 @@ public abstract class GLWallpaperService2 extends WallpaperService {
 		public void onCreate(SurfaceHolder surfaceHolder) {
 			Log.d("Godot", "GLEngine::onCreate()");
 		    super.onCreate(surfaceHolder);
-		    glSurfaceView = new WallpaperGLSurfaceView(GLWallpaperService2.this);
+		    glSurfaceView = getGLSurfaceView();
 		}
+		
+		public abstract WallpaperGLSurfaceView getGLSurfaceView();
 		
 		@Override
 		public void onVisibilityChanged(boolean visible) {
 			Log.d("Godot", "GLEngine::onVisibilityChanged()");
 		    super.onVisibilityChanged(visible);
 		 
-		    if (rendererHasBeenSet) {
+			if (glSurfaceView.isRendererSet()) {
 		        if (visible) {
 		            glSurfaceView.onResume();
 		        } else {
@@ -72,12 +77,16 @@ public abstract class GLWallpaperService2 extends WallpaperService {
 		    glSurfaceView.onDestroy();
 		}
 		
-		protected void setRenderer(Renderer renderer) {
-			Log.d("Godot", "GLEngine::setRenderer()");
-			glSurfaceView.setEGLConfigChooser(8 , 8, 8, 8, 16, 0); // added to get drawing in emulator
-			glSurfaceView.setRenderer(renderer);
-		    rendererHasBeenSet = true;
-		}
+//      MAINT: May want to re-visit this design choice later. Instead of having
+//             the WallpaperService.Engine (derived class) set the renderer 
+//             explicitly, we rely on the constructor of the SurfaceView (derived
+//             class) to create and set the renderer.
+//		protected void setRenderer(Renderer renderer) {
+//			Log.d("Godot", "GLEngine::setRenderer()");
+//			glSurfaceView.setEGLConfigChooser(8 , 8, 8, 8, 16, 0); // added to get drawing in emulator
+//			glSurfaceView.setRenderer(renderer);
+//		    rendererHasBeenSet = true;
+//		}
 		 
 		protected void setEGLContextClientVersion(int version) {
 			Log.d("Godot", "GLEngine::setEGLContextClientVersion()");
@@ -88,16 +97,6 @@ public abstract class GLWallpaperService2 extends WallpaperService {
 			Log.d("Godot", "GLEngine::setPreserveEGLContextOnPause()");
 		    glSurfaceView.setPreserveEGLContextOnPause(preserve);
 		}
-		
-	    
-	    
-	    
-	    /////////////////////
-	    // GODOT FUNCTIONS //
-	    /////////////////////
-
-		
-		
 	}
 }
 

@@ -515,7 +515,7 @@ public class GodotIO {
 		return Build.MODEL;
 	}
 
-	public boolean needsReloadHooks() {
+	public static boolean needsReloadHooks() {
 
 		return android.os.Build.VERSION.SDK_INT < 11;
 	}

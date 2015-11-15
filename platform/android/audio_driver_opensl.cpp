@@ -409,7 +409,8 @@ void AudioDriverOpenSL::set_pause(bool p_pause) {
 AudioDriverOpenSL::AudioDriverOpenSL()
 {
 	s_ad=this;
-	mutex=Mutex::create();//NULL;
+	//mutex=Mutex::create();//NULL;
+	mutex=NULL;
 	pause=false;
 }
 

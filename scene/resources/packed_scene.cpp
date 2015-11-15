@@ -46,6 +46,9 @@ Node *SceneState::instance(bool p_gen_edit_state) const {
 
 	// nodes where instancing failed (because something is missing)
 	List<Node*> stray_instances;
+	// Some nodes need to wait for their children to exist before they can
+	// set child-dependant properties.
+	List<ChildData> wait_for_children;
 
 #define NODE_FROM_ID(p_name,p_id)\
 	Node *p_name;\
@@ -193,7 +196,17 @@ Node *SceneState::instance(bool p_gen_edit_state) const {
 					ERR_FAIL_INDEX_V( nprops[j].name, sname_count, NULL );
 					ERR_FAIL_INDEX_V( nprops[j].value, prop_count, NULL );
 
-					node->set(snames[ nprops[j].name ],props[ nprops[j].value ],&valid);
+					bool fix = true;
+					const StringName& p_path = snames[ nprops[j].name ];
+					String path = p_path;
+					String what=path.get_slicec('/',2);
+					if (what=="bound_childs" && fix) {
+						// save
+						ChildData cd = {node, snames[ nprops[j].name ], props[ nprops[j].value ]};
+						wait_for_children.push_back(cd);
+					}else{
+						node->set(snames[ nprops[j].name ],props[ nprops[j].value ],&valid);
+					}
 				}
 			}
 
@@ -241,6 +254,11 @@ Node *SceneState::instance(bool p_gen_edit_state) const {
 		}
 	}
 
+	// Now that the child nodes exist, let's finish the setup of the unfinished nodes
+	for (List<ChildData>::Element *E=wait_for_children.front();E;E=E->next()) {
+		bool valid;
+		E->get().node->set( E->get().name, E->get().value,  &valid);
+	}
 
 	//do connections
 

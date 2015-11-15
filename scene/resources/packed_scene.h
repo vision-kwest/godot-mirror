@@ -91,6 +91,12 @@ class SceneState : public Reference {
 		Vector<int> binds;
 	};
 
+	struct ChildData {
+		Node* node;
+		StringName name;
+		Variant value;
+	};
+
 	Vector<ConnectionData> connections;
 
 

@@ -204,7 +204,7 @@ def configure(env):
 
 	elif (env["target"]=="debug"):
 
-		env.Append(CCFLAGS=['-D_DEBUG', '-g', '-Wall', '-O0', '-DDEBUG_ENABLED'])
+		env.Append(CCFLAGS=['-D_DEBUG', '-g', '-pg', '-Wall', '-O0', '-DDEBUG_ENABLED'])
 		env.Append(CPPFLAGS=['-DDEBUG_MEMORY_ALLOC'])
 
 	env.Append(CPPFLAGS=['-DANDROID_ENABLED', '-DUNIX_ENABLED', '-DNO_FCNTL','-DMPC_FIXED_POINT'])
@@ -213,6 +213,18 @@ def configure(env):
 	if(env["opus"]=="yes"):
 		env.Append(CFLAGS=["-DOPUS_ARM_OPT"])
 		env.opus_fixed_point="yes"
+
+	'''
+	The '-pg' option requires mc_count; which Android doesnot implement. So we implement it in this
+	extra android-ndk-profiler lib.
+	'''
+	if (env["target"]=="debug"):
+		env.Append(CPPPATH=["/home/kwesi/Desktop/sdk/android/ndk-modules/android-ndk-profiler"])
+		if env['android_arch']=='armv6':
+			env.Append(LIBPATH=["/home/kwesi/Desktop/sdk/android/ndk-modules/android-ndk-profiler/armeabi"])
+		elif env["android_arch"]=="armv7":
+			env.Append(LIBPATH=["/home/kwesi/Desktop/sdk/android/ndk-modules/android-ndk-profiler/armeabi-v7a"])
+		env.Append(LIBS=["android-ndk-profiler"])
 
 	if (env['android_stl']=='yes'):
 		#env.Append(CCFLAGS=[env["ANDROID_NDK_ROOT"]+"/sources/cxx-stl/system/include"])

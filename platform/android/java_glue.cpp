@@ -41,6 +41,7 @@
 #include "core/os/keyboard.h"
 #include "java_class_wrapper.h"
 #include "android/asset_manager_jni.h"
+#include "/home/kwesi/Desktop/sdk/android/ndk-modules/android-ndk-profiler/prof.h"
 
 static JavaClassWrapper *java_class_wrapper=NULL;
 static OS_Android *os_android=NULL;
@@ -773,6 +774,8 @@ static void _stop_video() {
 }
 
 static void _initialize_contex_wrapper(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdline, jobject p_asset_manager) {
+	__android_log_print(ANDROID_LOG_INFO, "godot", "monstartup('libgodot_android.so')\n");
+	monstartup("libgodot_android.so");
 
 	__android_log_print(ANDROID_LOG_INFO,"godot","**INIT EVENT! - %p\n",env);
 
@@ -962,6 +965,9 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_quit(JNIEnv * env, jobjec
 	quit_request=true;
 	print_line("BACK PRESSED");
 	input_mutex->unlock();
+
+	__android_log_print(ANDROID_LOG_INFO, "godot", "moncleanup()\n");
+	moncleanup();
 
 }
 

@@ -110,6 +110,7 @@ def configure(env):
 	env.android_source_modules.append("../libs/google_play_services")	
 	env.android_source_modules.append("../libs/downloader_library")	
 	env.android_source_modules.append("../libs/play_licensing")	
+	env.android_source_modules.append("../libs/gl_wallpaper_service")
 
 	neon_text=""
 	if env["android_arch"]=="armv7" and env['android_neon']=='yes':

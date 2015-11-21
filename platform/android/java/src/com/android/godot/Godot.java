@@ -257,7 +257,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
         // ...add to FrameLayout
 		   layout.addView(edittext);
 		
-		mView = new GodotView(getApplication(),io,use_gl2,use_32_bits, this);
+		mView = new GodotView(getApplication(),use_gl2,use_32_bits, this);
 		layout.addView(mView,new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		mView.setKeepScreenOn(true);
 		

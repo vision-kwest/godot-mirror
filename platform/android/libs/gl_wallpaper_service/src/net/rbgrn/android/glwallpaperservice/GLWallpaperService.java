@@ -304,22 +304,28 @@ public abstract class GLWallpaperService extends WallpaperService {
                 if (mGLSurfaceView != null) {
                     if (visible) {
                         mGLSurfaceView.onResume();
+                        resumeCallBack();
                     } else {
                         mGLSurfaceView.onPause();
+                        pauseCallBack();
                     }
                 } else {
                     pendingOperations.add(new Runnable() {
                         public void run() {
                             if (visible) {
                                 mGLSurfaceView.onResume();
+                                resumeCallBack();
                             } else {
                                 mGLSurfaceView.onPause();
+                                pauseCallBack();
                             }
                         }
                     });
                 }
             }
         }
+        public void resumeCallBack() {}
+        public void pauseCallBack() {}
 
         @Override
         public void onSurfaceChanged(final SurfaceHolder holder, final int format, final int width, final int height) {
@@ -341,6 +347,7 @@ public abstract class GLWallpaperService extends WallpaperService {
             synchronized (lock) {
                 if (mGLSurfaceView == null) {
                     mGLSurfaceView = getGLSurfaceView();
+                    surfaceCreatedCallBack();
                     for (Runnable pendingOperation: pendingOperations) {
                         pendingOperation.run();
                     }
@@ -349,6 +356,7 @@ public abstract class GLWallpaperService extends WallpaperService {
                 mGLSurfaceView.surfaceCreated(holder);
             }
         }
+        public void surfaceCreatedCallBack() {}
 
         @Override
         public void onSurfaceDestroyed(SurfaceHolder holder) {

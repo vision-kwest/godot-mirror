@@ -63,12 +63,14 @@ public class GodotView extends GLBaseView {
 	private Godot activity;
 
 	public GodotView(Context context,boolean p_use_gl2, boolean p_use_32_bits, Godot p_activity) {
-		super(context, p_use_gl2, p_use_32_bits, GodotIO.needsReloadHooks(), new Renderer());
+		super(context, p_use_gl2, p_use_32_bits, GodotIO.needsReloadHooks());
+		this.setRenderer(new Renderer());
 		activity = p_activity;
     }
 
     public GodotView(Context context, boolean translucent, int depth, int stencil) {
-		super(context, translucent, depth, stencil, new Renderer());
+		super(context, translucent, depth, stencil);
+        this.setRenderer(new Renderer());
     }
 
 	@Override public boolean onTouchEvent (MotionEvent event) {

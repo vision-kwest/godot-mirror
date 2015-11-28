@@ -64,7 +64,7 @@ public class GLBaseView extends GLSurfaceView {
 	private static boolean use_32=false;
 	private static boolean needs_reload=false;
 	
-	public GLBaseView(Context context, boolean p_use_gl2, boolean p_use_32_bits, boolean p_needs_reload, GLSurfaceView.Renderer renderer) {
+	public GLBaseView(Context context, boolean p_use_gl2, boolean p_use_32_bits, boolean p_needs_reload) {
 		super(context);
 		use_gl2=p_use_gl2;
 		use_32=p_use_32_bits;
@@ -75,15 +75,15 @@ public class GLBaseView extends GLSurfaceView {
 			setPreserveEGLContextOnPause(true);
 		}
 
-		init(false, 16, 0, renderer);
+		init(false, 16, 0);
     }
 
-    public GLBaseView(Context context, boolean translucent, int depth, int stencil, GLSurfaceView.Renderer renderer) {
+    public GLBaseView(Context context, boolean translucent, int depth, int stencil) {
 		super(context);
-		init(translucent, depth, stencil, renderer);
+		init(translucent, depth, stencil);
     }
 
-    private void init(boolean translucent, int depth, int stencil, GLSurfaceView.Renderer renderer) {
+    private void init(boolean translucent, int depth, int stencil) {
 
 		this.setFocusableInTouchMode(true);
 		/* By default, GLSurfaceView() creates a RGB_565 opaque surface.
@@ -116,9 +116,6 @@ public class GLBaseView extends GLSurfaceView {
 						new ConfigChooser(8, 8, 8, 8, 16, stencil) :
 						new ConfigChooser(5, 6, 5, 0, 16, stencil) );
 		}
-
-		/* Set the renderer responsible for frame rendering */
-		setRenderer(renderer);
 	}
     
 	private static class ContextFactory implements GLSurfaceView.EGLContextFactory {

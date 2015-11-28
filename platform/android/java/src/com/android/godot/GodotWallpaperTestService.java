@@ -4,18 +4,18 @@ import net.rbgrn.android.glwallpaperservice.*;
 
 // Original code provided by Robert Green
 // http://www.rbgrn.net/content/354-glsurfaceview-adapted-3d-live-wallpapers
-public class GodotWallpaperService extends GLWallpaperService {
-	public GodotWallpaperService() {
+public class GodotWallpaperTestService extends GLWallpaperService {
+	public GodotWallpaperTestService() {
 		super();
 	}
 	public Engine onCreateEngine() {
-		GodotWallpaperEngine engine = new GodotWallpaperEngine();
+		GodotWallpaperTestEngine engine = new GodotWallpaperTestEngine();
 		return engine;
 	}
 
-	class GodotWallpaperEngine extends GLEngine {
+	class GodotWallpaperTestEngine extends GLEngine {
 		GodotWallpaperTestRenderer renderer;
-		public GodotWallpaperEngine() {
+		public GodotWallpaperTestEngine() {
 			super();
 			// handle prefs, other initialization
 			renderer = new GodotWallpaperTestRenderer();

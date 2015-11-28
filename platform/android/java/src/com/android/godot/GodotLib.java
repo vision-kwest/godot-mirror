@@ -32,9 +32,6 @@ package com.android.godot;
 
 public class GodotLib {
 
-
-     public static GodotIO io;
-
      static {
 	 System.loadLibrary("godot_android");
      }

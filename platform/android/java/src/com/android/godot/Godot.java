@@ -349,7 +349,6 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 
 		io = new GodotIO(this);
 		io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-		GodotLib.io=io;
 		Log.d("GODOT", "command_line is null? " + ((command_line == null)?"yes":"no"));
 		/*if(command_line != null){
 		    Log.d("GODOT", "Command Line:");

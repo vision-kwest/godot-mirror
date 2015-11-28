@@ -83,6 +83,16 @@ public abstract class GLWallpaperService extends WallpaperService {
         public GLEngine() {
         }
 
+        public GLSurfaceView getGLSurfaceView() {
+    		// Sub-classes that need a special version of GLSurfaceView can override this method.
+        	return new GLSurfaceView(GLWallpaperService.this){
+                @Override
+                public SurfaceHolder getHolder() {
+                    return GLEngine.this.getSurfaceHolder();
+                }
+        	};
+        }
+        
         public void setGLWrapper(final GLSurfaceView.GLWrapper glWrapper) {
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
@@ -330,12 +340,7 @@ public abstract class GLWallpaperService extends WallpaperService {
         public void onSurfaceCreated(SurfaceHolder holder) {
             synchronized (lock) {
                 if (mGLSurfaceView == null) {
-                    mGLSurfaceView = new GLSurfaceView(GLWallpaperService.this) {
-                        @Override
-                        public SurfaceHolder getHolder() {
-                            return GLEngine.this.getSurfaceHolder();
-                        }
-                    };
+                    mGLSurfaceView = getGLSurfaceView();
                     for (Runnable pendingOperation: pendingOperations) {
                         pendingOperation.run();
                     }

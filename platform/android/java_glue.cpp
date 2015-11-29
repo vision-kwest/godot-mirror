@@ -45,6 +45,16 @@
 static JavaClassWrapper *java_class_wrapper=NULL;
 static OS_Android *os_android=NULL;
 
+// Wallpaper mode setting
+bool is_wallpaper = false;
+// Context Wapper classes
+char* ctx_wrapper_class = NULL;
+char activity_class[] = "com/android/godot/Godot";
+char wallpaper_service_class[] = "com/android/godot/GodotWallpaperService";
+// IO classes
+char* io_class = NULL;
+char godot_io_class[] = "Lcom/android/godot/GodotIO;";
+char base_io_class[] = "Lcom/android/godot/BaseIO;";
 
 struct jvalret {
 
@@ -765,25 +775,32 @@ static void _stop_video() {
 	env->CallVoidMethod(godot_io, _stopVideo);
 }
 
-JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdline,jobject p_asset_manager) {
+void initialize_contex_wrapper(JNIEnv * env, jobject obj, jobject contex_wrapper,jboolean p_need_reload_hook, jobjectArray p_cmdline,jobject p_asset_manager, jboolean p_is_wallpaper) {
 
 	__android_log_print(ANDROID_LOG_INFO,"godot","**INIT EVENT! - %p\n",env);
 
+	is_wallpaper = p_is_wallpaper;
+	if (!is_wallpaper){
+		ctx_wrapper_class = activity_class;
+		io_class = godot_io_class;
+	}else{
+		ctx_wrapper_class = wallpaper_service_class;
+		io_class = base_io_class;
+	}
 
 	initialized=true;
 
 	JavaVM *jvm;
 	env->GetJavaVM(&jvm);
 
-	_godot_instance=env->NewGlobalRef(activity);
-//	_godot_instance=activity;
+	_godot_instance=env->NewGlobalRef(contex_wrapper);
+//	_godot_instance=contex_wrapper;
 
 	__android_log_print(ANDROID_LOG_INFO,"godot","***************** HELLO FROM JNI!!!!!!!!");
 
 	{
 		//setup IO Object
-
-		jclass cls = env->FindClass("com/android/godot/Godot");
+		jclass cls = env->FindClass(ctx_wrapper_class);
 		if (cls) {
 
 			cls=(jclass)env->NewGlobalRef(cls);
@@ -791,7 +808,7 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, 
 		}
 
 		__android_log_print(ANDROID_LOG_INFO,"godot","STEP2, %p",cls);
-		jfieldID fid = env->GetStaticFieldID(cls, "io", "Lcom/android/godot/GodotIO;");
+		jfieldID fid = env->GetStaticFieldID(cls, "io", io_class);
 		__android_log_print(ANDROID_LOG_INFO,"godot","STEP3 %i",fid);
 		jobject ob = env->GetStaticObjectField(cls,fid);
 		__android_log_print(ANDROID_LOG_INFO,"godot","STEP4, %p",ob);
@@ -802,7 +819,7 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, 
 
 		_on_video_init = env->GetMethodID(cls, "onVideoInit", "(Z)V");
 
-		jclass clsio = env->FindClass("com/android/godot/Godot");
+		jclass clsio = env->FindClass(ctx_wrapper_class);
 		if (cls) {
 			jclass c = env->GetObjectClass(gob);
 			_openURI = env->GetMethodID(c,"openURI","(Ljava/lang/String;)I");
@@ -810,9 +827,11 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, 
 			_getLocale = env->GetMethodID(c,"getLocale","()Ljava/lang/String;");
 			_getModel = env->GetMethodID(c,"getModel","()Ljava/lang/String;");
 			_getUniqueID = env->GetMethodID(c,"getUniqueID","()Ljava/lang/String;");
-			_showKeyboard = env->GetMethodID(c,"showKeyboard","(Ljava/lang/String;)V");
-			_hideKeyboard = env->GetMethodID(c,"hideKeyboard","()V");
-			_setScreenOrientation = env->GetMethodID(c,"setScreenOrientation","(I)V");
+			if (!is_wallpaper){
+				_showKeyboard = env->GetMethodID(c,"showKeyboard","(Ljava/lang/String;)V");
+				_hideKeyboard = env->GetMethodID(c,"hideKeyboard","()V");
+				_setScreenOrientation = env->GetMethodID(c,"setScreenOrientation","(I)V");
+			}
 			_getSystemDir = env->GetMethodID(c,"getSystemDir","(I)Ljava/lang/String;");
 			_playVideo = env->GetMethodID(c,"playVideo","(Ljava/lang/String;)V");
 			_isVideoPlaying = env->GetMethodID(c,"isVideoPlaying","()Z");
@@ -863,7 +882,11 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, 
 
 	__android_log_print(ANDROID_LOG_INFO,"godot","CMDLINE LEN %i - APK EXPANSION %I\n",cmdlen,int(use_apk_expansion));
 
-	os_android = new OS_Android(_gfx_init_func,env,_open_uri,_get_data_dir,_get_locale, _get_model,_show_vk, _hide_vk,_set_screen_orient,_get_unique_id, _get_system_dir, _play_video,_is_video_playing, _pause_video, _stop_video,use_apk_expansion);
+	if (!is_wallpaper){
+		os_android = new OS_Android(_gfx_init_func,env,_open_uri,_get_data_dir,_get_locale, _get_model,_show_vk, _hide_vk,_set_screen_orient,_get_unique_id, _get_system_dir, _play_video,_is_video_playing, _pause_video, _stop_video,use_apk_expansion);
+	}else{
+		os_android = new OS_Android(_gfx_init_func,env,_open_uri,_get_data_dir,_get_locale, _get_model,    NULL,     NULL,              NULL,_get_unique_id, _get_system_dir, _play_video,_is_video_playing, _pause_video, _stop_video,use_apk_expansion);
+	}
 	os_android->set_need_reload_hooks(p_need_reload_hook);
 
 	char wd[500];
@@ -903,6 +926,13 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, 
 	suspend_mutex=Mutex::create();
 
 
+}
+
+JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initialize(JNIEnv * env, jobject obj, jobject activity,jboolean p_need_reload_hook, jobjectArray p_cmdline,jobject p_asset_manager) {
+	initialize_contex_wrapper(env, obj, activity, p_need_reload_hook, p_cmdline, p_asset_manager, false);
+}
+JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_initializewallpaper(JNIEnv * env, jobject obj, jobject wallpaper,jboolean p_need_reload_hook, jobjectArray p_cmdline,jobject p_asset_manager) {
+	initialize_contex_wrapper(env, obj, wallpaper, p_need_reload_hook, p_cmdline, p_asset_manager, true);
 }
 
 JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_resize(JNIEnv * env, jobject obj,  jint width, jint height, jboolean reload) {
@@ -958,7 +988,7 @@ static void _initialize_java_modules() {
 
 		JNIEnv *env = ThreadAndroid::get_env();
 
-		jclass activityClass = env->FindClass("com/android/godot/Godot");
+		jclass activityClass = env->FindClass(ctx_wrapper_class);
 
 		jmethodID getClassLoader = env->GetMethodID(activityClass,"getClassLoader", "()Ljava/lang/ClassLoader;");
 
@@ -1074,7 +1104,7 @@ JNIEXPORT void JNICALL Java_com_android_godot_GodotLib_step(JNIEnv * env, jobjec
 
 	if (os_android->main_loop_iterate()==true) {
 
-		jclass cls = env->FindClass("com/android/godot/Godot");
+		jclass cls = env->FindClass(ctx_wrapper_class);
 		jmethodID _finish = env->GetMethodID(cls, "forceQuit", "()V");
 		env->CallVoidMethod(_godot_instance, _finish);
 		__android_log_print(ANDROID_LOG_INFO,"godot","**FINISH REQUEST!!! - %p-%i\n",env,Thread::get_caller_ID());

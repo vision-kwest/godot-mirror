@@ -108,8 +108,8 @@ public class GLBaseView extends GLSurfaceView {
 
 		if (use_32) {
 			setEGLConfigChooser( translucent ?
-						new ConfigChooser(8, 8, 8, 8, 24, stencil) :
-						new ConfigChooser(8, 8, 8, 8, 24, stencil) );
+						new FallbackConfigChooser(8, 8, 8, 8, 24, stencil, new ConfigChooser(8, 8, 8, 8, 16, stencil)) :
+						new FallbackConfigChooser(8, 8, 8, 8, 24, stencil, new ConfigChooser(5, 6, 5, 0, 16, stencil)) );
 
 		} else {
 			setEGLConfigChooser( translucent ?
@@ -144,7 +144,26 @@ public class GLBaseView extends GLSurfaceView {
 		    Log.e(TAG, String.format("%s: EGL error: 0x%x", prompt, error));
 		}
     }
-    
+    	/* Fallback if 32bit View is not supported*/
+	private static class FallbackConfigChooser extends ConfigChooser {
+		private ConfigChooser fallback;
+		
+		public FallbackConfigChooser(int r, int g, int b, int a, int depth, int stencil, ConfigChooser fallback) {
+			super(r, g, b, a, depth, stencil);
+			this.fallback = fallback;
+		}
+      
+      		@Override
+		public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
+			EGLConfig ec = super.chooseConfig(egl, display, configs);
+			if (ec == null) {
+	  			Log.w(TAG, "Trying ConfigChooser fallback");
+	  			ec = fallback.chooseConfig(egl, display, configs);
+			}
+			return ec;
+      		}
+    	}
+
 	private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
 
 		public ConfigChooser(int r, int g, int b, int a, int depth, int stencil) {

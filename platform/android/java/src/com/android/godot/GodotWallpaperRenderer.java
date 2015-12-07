@@ -47,6 +47,7 @@ public class GodotWallpaperRenderer implements GLWallpaperService.Renderer {
 	 */
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 		GodotLib.newcontext();
+		GodotWallpaperService.current_gl_thread = android.os.Process.myTid();
 	}
 
 	/**

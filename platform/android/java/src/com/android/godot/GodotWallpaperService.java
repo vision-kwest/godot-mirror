@@ -46,8 +46,6 @@ public class GodotWallpaperService extends GLWallpaperService {
 			renderer = new GodotWallpaperRenderer();
 			setRenderer(renderer);
 			setRenderMode(RENDERMODE_CONTINUOUSLY);
-			
-			GodotWallpaperService.current_gl_thread = android.os.Process.myTid();
 		}
 
 		public void onDestroy() {

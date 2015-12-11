@@ -12,11 +12,8 @@ import net.rbgrn.android.glwallpaperservice.*;
 // Original code provided by Robert Green
 // http://www.rbgrn.net/content/354-glsurfaceview-adapted-3d-live-wallpapers
 public class GodotWallpaperRenderer implements GLWallpaperService.Renderer {
-    // MAINT: No sure if this should be static or not ...?
-    //private static boolean firsttime=true;
     public boolean firsttime;
     public int frame_count; 
-    public boolean new_ctx;
 
 
 	/**
@@ -35,7 +32,6 @@ public class GodotWallpaperRenderer implements GLWallpaperService.Renderer {
         super();
         frame_count = 0;
         firsttime = true;
-        new_ctx = false;
 	}
 
 	public void release() {
@@ -46,7 +42,7 @@ public class GodotWallpaperRenderer implements GLWallpaperService.Renderer {
 	 * The Surface is created/init()
 	 */
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		GodotLib.newcontext();
+		GodotLib.newcontext(GodotWallpaperService.use_32_bit);
 		GodotWallpaperService.current_gl_thread = android.os.Process.myTid();
 	}
 
@@ -69,7 +65,7 @@ public class GodotWallpaperRenderer implements GLWallpaperService.Renderer {
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
 		if (GodotWallpaperService.current_gl_thread != android.os.Process.myTid()){
 			GodotWallpaperService.current_gl_thread = android.os.Process.myTid();
-			GodotLib.newcontext();			
+			GodotLib.newcontext(GodotWallpaperService.use_32_bit);			
 		}
 		GodotLib.resize(width, height,!firsttime);
         firsttime=false;

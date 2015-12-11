@@ -11,6 +11,7 @@ public class GodotWallpaperService extends GLWallpaperService {
     static public BaseIO io=null;
     public boolean godot_initialized=false;
     static public int current_gl_thread;
+    static public boolean use_32_bit=false;    
 
 	public GodotWallpaperService() {
 		super();
@@ -58,7 +59,7 @@ public class GodotWallpaperService extends GLWallpaperService {
 		
         public GLSurfaceView getGLSurfaceView() {
             boolean use_gl2 = true;
-            boolean use_32_bits=true; // setting this to 'true' so we get a emulator friendly surface
+            boolean use_32_bits=GodotWallpaperService.use_32_bit;
             boolean use_reload=BaseIO.needsReloadHooks();
         	
         	// Sub-classes that need a special version of GLSurfaceView can override this method.
@@ -73,6 +74,10 @@ public class GodotWallpaperService extends GLWallpaperService {
         public void surfaceCreatedCallBack() {
         	// Now that we have surface, we can init GL context
             if (!GodotWallpaperService.this.godot_initialized){
+            	
+            	// In the Godot (Activity) the '-use_depth_32' command-line flag can set this here
+            	GodotWallpaperService.use_32_bit = true;  // setting this to 'true' so we get a emulator friendly surface
+            	
 				io = new BaseIO(GodotWallpaperService.this);
 				io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
 				//GodotLib.io=io;

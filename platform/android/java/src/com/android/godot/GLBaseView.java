@@ -61,7 +61,7 @@ public class GLBaseView extends GLSurfaceView {
 	private static final boolean DEBUG = false;
 
 	private static boolean use_gl2=false;
-	private static boolean use_32=false;
+	protected static boolean use_32=false;
 	private static boolean needs_reload=false;
 	
 	public GLBaseView(Context context, boolean p_use_gl2, boolean p_use_32_bits, boolean p_needs_reload) {
@@ -159,6 +159,7 @@ public class GLBaseView extends GLSurfaceView {
 			if (ec == null) {
 	  			Log.w(TAG, "Trying ConfigChooser fallback");
 	  			ec = fallback.chooseConfig(egl, display, configs);
+				use_32=false;
 			}
 			return ec;
       		}

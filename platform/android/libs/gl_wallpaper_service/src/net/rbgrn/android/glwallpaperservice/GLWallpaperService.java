@@ -346,8 +346,8 @@ public abstract class GLWallpaperService extends WallpaperService {
         public void onSurfaceCreated(SurfaceHolder holder) {
             synchronized (lock) {
                 if (mGLSurfaceView == null) {
+                    surfaceCreatedCallBack(); // Init Godot first to set use_32 boolean
                     mGLSurfaceView = getGLSurfaceView();
-                    surfaceCreatedCallBack();
                     for (Runnable pendingOperation: pendingOperations) {
                         pendingOperation.run();
                     }

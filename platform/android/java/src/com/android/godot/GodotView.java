@@ -341,7 +341,7 @@ public class GodotView extends GLBaseView {
 		}
 
 		public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-			GodotLib.newcontext();
+			GodotLib.newcontext(use_32);
 		}
 	}
 }

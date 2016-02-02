@@ -4,32 +4,47 @@ import android.opengl.GLSurfaceView;
 import android.provider.Settings.Secure;
 import android.view.SurfaceHolder;
 import net.rbgrn.android.glwallpaperservice.*;
+import android.util.Log;
 
 // Original code provided by Robert Green
 // http://www.rbgrn.net/content/354-glsurfaceview-adapted-3d-live-wallpapers
 public class GodotWallpaperService extends GLWallpaperService {
+    private static final String LOG_TAG = "GodotWallpaperService";
     static public BaseIO io=null;
     public boolean godot_initialized=false;
     static public int current_gl_thread;
     static public boolean use_32_bit=false;    
 
+	GodotWallpaperRenderer renderer;
+
 	public GodotWallpaperService() {
 		super();
+        Log.v(LOG_TAG, "GodotWallpaperService.GodotWallpaperService()");
 	}
 	public Engine onCreateEngine() {
+        Log.v(LOG_TAG, "GodotWallpaperService.onCreateEngine()");
 		GodotWallpaperEngine engine = new GodotWallpaperEngine();
 		return engine;
 	}
     public void onVideoInit(boolean use_gl2) {
+        Log.v(LOG_TAG, "GodotWallpaperService.onVideoInit()");
         //mView = new GodotView(getApplication(),io,use_gl2);
         //setContentView(mView);
     }
     public void forceQuit() {
+        Log.v(LOG_TAG, "GodotWallpaperService.forceQuit()");
         // Godot callback that does the real quitting. Is called by step() after quit().
         System.exit(0);
     }
     
     public void onDestroy(){
+        Log.v(LOG_TAG, "GodotWallpaperService.onDestroy()");
+        // Kill renderer
+        if (renderer != null) {
+        	renderer.release(); // assuming yours has this method - it should!
+        }
+        renderer = null;
+    	
     	if (GodotWallpaperService.this.godot_initialized){
     		GodotLib.quit();
     		GodotLib.step();
@@ -38,26 +53,26 @@ public class GodotWallpaperService extends GLWallpaperService {
     }
 
 	class GodotWallpaperEngine extends GLEngine {
-		GodotWallpaperRenderer renderer;
         private String[] command_line;
 
 		public GodotWallpaperEngine() {
 			super();
-			// handle prefs, other initialization
-			renderer = new GodotWallpaperRenderer();
-			setRenderer(renderer);
-			setRenderMode(RENDERMODE_CONTINUOUSLY);
+	        Log.v(LOG_TAG, "GodotWallpaperEngine.GodotWallpaperEngine("+myId+")");
+			if (!mIsInitialized){
+				// handle prefs, other initialization
+				renderer = new GodotWallpaperRenderer();
+				setRenderer(renderer);
+				setRenderMode(RENDERMODE_CONTINUOUSLY);
+			}
 		}
 
 		public void onDestroy() {
 			super.onDestroy();
-			if (renderer != null) {
-				renderer.release(); // assuming yours has this method - it should!
-			}
-			renderer = null;
+	        Log.v(LOG_TAG, "GodotWallpaperEngine.onDestroy("+myId+")");
 		}
 		
         public GLSurfaceView getGLSurfaceView() {
+            Log.v(LOG_TAG, "GodotWallpaperEngine.getGLSurfaceView("+myId+")");
             boolean use_gl2 = true;
             boolean use_32_bits=GodotWallpaperService.use_32_bit;
             boolean use_reload=BaseIO.needsReloadHooks();
@@ -66,12 +81,26 @@ public class GodotWallpaperService extends GLWallpaperService {
         	return new GLBaseView(GodotWallpaperService.this, use_gl2, use_32_bits, use_reload){
                 @Override
                 public SurfaceHolder getHolder() {
-                    return GodotWallpaperEngine.this.getSurfaceHolder();
+                    Log.v(LOG_TAG, "GLBaseViewSubClass.getHolder("+myId+")");
+                    /*
+                    When the View tries to get a Surface, it should forward that ask to a
+                    WallpaperService.Engine so that it can draw on a Surface that's attached to a
+                    window on the screen.  In the old design, every View had its own Engine to grab
+                    a Surface from.  In the new design, there is only one View, so it must know
+                    which Engine's Surface to draw to and at the right time.  The Service is long
+                    lived so it will know the proper Surface to use.  Engines should set the current
+                    Surface on the Service when they are created/come into focus.  Views are not
+                    really "created" until an Engine Surface has been setup, at onSurfaceCreated()
+                    time.  Calls to the View are cached until this time and then they are executed
+                    in batch.
+                     */
+                    return GodotWallpaperService.this.mSurfaceHolder;
                 }
         	};
         }
         
         public void surfaceCreatedCallBack() {
+            Log.v(LOG_TAG, "GodotWallpaperEngine.surfaceCreatedCallBack("+myId+")");
         	// Now that we have surface, we can init GL context
             if (!GodotWallpaperService.this.godot_initialized){
             	
@@ -93,9 +122,11 @@ public class GodotWallpaperService extends GLWallpaperService {
 
         // Handle onVisibilityChanged()
         public void resumeCallBack() {
+            Log.v(LOG_TAG, "GodotWallpaperEngine.resumeCallBack("+myId+")");
         	GodotLib.focusin();
         }
         public void pauseCallBack() {
+            Log.v(LOG_TAG, "GodotWallpaperEngine.pauseCallBack("+myId+")");
         	GodotLib.focusout();
         }
 	}

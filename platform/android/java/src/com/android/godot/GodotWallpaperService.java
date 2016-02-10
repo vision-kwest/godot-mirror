@@ -14,6 +14,7 @@ public class GodotWallpaperService extends GLWallpaperService {
     public boolean godot_initialized=false;
     static public int current_gl_thread;
     static public boolean use_32_bit=false;    
+    private String[] command_line;
 
 	GodotWallpaperRenderer renderer;
 
@@ -52,8 +53,42 @@ public class GodotWallpaperService extends GLWallpaperService {
     	super.onDestroy();
     }
 
+	@Override
+	public void surfaceCreatedCallBack() {
+	    Log.v(LOG_TAG, "GodotWallpaperEngine.surfaceCreatedCallBack()");
+		// Now that we have surface, we can init GL context
+	    if (!GodotWallpaperService.this.godot_initialized){
+	    	
+	    	// In the Godot (Activity) the '-use_depth_32' command-line flag can set this here
+	    	GodotWallpaperService.use_32_bit = true;  // setting this to 'true' so we get a emulator friendly surface
+	    	
+			io = new BaseIO(GodotWallpaperService.this);
+			io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+			//GodotLib.io=io;
+			boolean use_reload_hooks = true; // even when droid sdk < 11
+			GodotLib.initializewallpaper(GodotWallpaperService.this,use_reload_hooks,command_line,getAssets());
+			GodotWallpaperService.this.godot_initialized=true;
+	    }else{
+	        // Godot Engine is a singleton so we only call initialize() once.
+	        // If it is used in a new context,
+	        // we call newcontext()
+	    }
+	}
+	
+	// Handle onVisibilityChanged()
+	@Override
+	public void resumeCallBack() {
+	    Log.v(LOG_TAG, "GodotWallpaperEngine.resumeCallBack()");
+		GodotLib.focusin();
+	}
+	
+	@Override
+	public void pauseCallBack() {
+	    Log.v(LOG_TAG, "GodotWallpaperEngine.pauseCallBack()");
+		GodotLib.focusout();
+	}
+    
 	class GodotWallpaperEngine extends GLEngine {
-        private String[] command_line;
 
 		public GodotWallpaperEngine() {
 			super();
@@ -61,20 +96,14 @@ public class GodotWallpaperService extends GLWallpaperService {
             if (mGLSurfaceView == null) {
 				// handle prefs, other initialization
 				renderer = new GodotWallpaperRenderer();
-				setRenderer(renderer);
-				setRenderMode(RENDERMODE_CONTINUOUSLY);
+				GodotWallpaperService.this.setRenderer(renderer);
+				GodotWallpaperService.this.setRenderMode(RENDERMODE_CONTINUOUSLY);
 			}
 		}
 
 		public void onDestroy() {
 			super.onDestroy();
 	        Log.v(LOG_TAG, "GodotWallpaperEngine.onDestroy("+mId+")");
-
-            if (mCurrentId != mId && mCurrentId != 0){
-                Log.v(LOG_TAG, "REBOOT!!!");
-                boolean aquireLock = false;
-                renderSetup(mSurfaceHolder, aquireLock);
-            }
 		}
 		
         public GLSurfaceView getGLSurfaceView() {
@@ -103,37 +132,6 @@ public class GodotWallpaperService extends GLWallpaperService {
                     return GodotWallpaperService.this.mSurfaceHolder;
                 }
         	};
-        }
-        
-        public void surfaceCreatedCallBack() {
-            Log.v(LOG_TAG, "GodotWallpaperEngine.surfaceCreatedCallBack("+mId+")");
-        	// Now that we have surface, we can init GL context
-            if (!GodotWallpaperService.this.godot_initialized){
-            	
-            	// In the Godot (Activity) the '-use_depth_32' command-line flag can set this here
-            	GodotWallpaperService.use_32_bit = true;  // setting this to 'true' so we get a emulator friendly surface
-            	
-				io = new BaseIO(GodotWallpaperService.this);
-				io.unique_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-				//GodotLib.io=io;
-				boolean use_reload_hooks = true; // even when droid sdk < 11
-				GodotLib.initializewallpaper(GodotWallpaperService.this,use_reload_hooks,command_line,getAssets());
-				GodotWallpaperService.this.godot_initialized=true;
-            }else{
-                // Godot Engine is a singleton so we only call initialize() once.
-                // If it is used in a new context,
-                // we call newcontext()
-            }
-        }
-
-        // Handle onVisibilityChanged()
-        public void resumeCallBack() {
-            Log.v(LOG_TAG, "GodotWallpaperEngine.resumeCallBack("+mId+")");
-        	GodotLib.focusin();
-        }
-        public void pauseCallBack() {
-            Log.v(LOG_TAG, "GodotWallpaperEngine.pauseCallBack("+mId+")");
-        	GodotLib.focusout();
         }
 	}
 }

@@ -59,7 +59,6 @@ public abstract class GLWallpaperService extends WallpaperService {
     private static final String LOG_TAG = "GLWallpaperService";
     public final static int RENDERMODE_WHEN_DIRTY = 0;
     public final static int RENDERMODE_CONTINUOUSLY = 1;
-    private Object lock = new Object();
 
     protected GLSurfaceView mGLSurfaceView = null;
     protected SurfaceHolder mSurfaceHolder = null;
@@ -84,217 +83,197 @@ public abstract class GLWallpaperService extends WallpaperService {
      */
     protected List<Runnable> pendingOperations = new ArrayList<Runnable>();
 
+    public GLWallpaperService() {
+        super();
+        Log.v(LOG_TAG, "GLWallpaperService.GLWallpaperService()");
+    }
+
     public void setGLWrapper(final GLSurfaceView.GLWrapper glWrapper) {
         Log.v(LOG_TAG, "GLEngine.setGLWrapper()");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                mGLSurfaceView.setGLWrapper(glWrapper);
-            } else {
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setGLWrapper(glWrapper);
-                    }
-                });
-            }
+        if (mGLSurfaceView != null) {
+            mGLSurfaceView.setGLWrapper(glWrapper);
+        } else {
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setGLWrapper(glWrapper);
+                }
+            });
         }
     }
 
     public void setDebugFlags(final int debugFlags) {
         Log.v(LOG_TAG, "GLEngine.setDebugFlags()");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                mGLSurfaceView.setDebugFlags(debugFlags);
-            } else {
-                this.debugFlags = debugFlags;
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setDebugFlags(debugFlags);
-                    }
-                });
-            }
+        if (mGLSurfaceView != null) {
+            mGLSurfaceView.setDebugFlags(debugFlags);
+        } else {
+            this.debugFlags = debugFlags;
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setDebugFlags(debugFlags);
+                }
+            });
         }
     }
 
     public int getDebugFlags() {
         Log.v(LOG_TAG, "GLEngine.getDebugFlags()");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                return mGLSurfaceView.getDebugFlags();
-            } else {
-                return debugFlags;
-            }
+        if (mGLSurfaceView != null) {
+            return mGLSurfaceView.getDebugFlags();
+        } else {
+            return debugFlags;
         }
     }
 
     public void setRenderer(final GLSurfaceView.Renderer renderer) {
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                Log.v(LOG_TAG, "GLEngine.setRenderer()");
-                mGLSurfaceView.setRenderer(renderer);
-                boolean isVisible = (mCurrentId != 0);
-                if (!isVisible) {
-                	mGLSurfaceView.onPause();
-                }
-            } else {
-                Log.v(LOG_TAG, "PENDING: GLEngine.setRenderer()");
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setRenderer(renderer);
-                    }
-                });
+        if (mGLSurfaceView != null) {
+            Log.v(LOG_TAG, "GLEngine.setRenderer()");
+            mGLSurfaceView.setRenderer(renderer);
+            boolean isVisible = (mCurrentId != 0);
+            if (!isVisible) {
+                mGLSurfaceView.onPause();
+                pauseCallBack();
             }
+        } else {
+            Log.v(LOG_TAG, "PENDING: GLEngine.setRenderer()");
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setRenderer(renderer);
+                }
+            });
         }
     }
 
     public void queueEvent(final Runnable r) {
         Log.v(LOG_TAG, "GLEngine.queueEvent()");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                mGLSurfaceView.queueEvent(r);
-            } else {
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        queueEvent(r);
-                    }
-                });
-            }
+        if (mGLSurfaceView != null) {
+            mGLSurfaceView.queueEvent(r);
+        } else {
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    queueEvent(r);
+                }
+            });
         }
     }
 
     public void setEGLContextFactory(final GLSurfaceView.EGLContextFactory factory) {
         Log.v(LOG_TAG, "GLEngine.setEGLContextFactory()");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                mGLSurfaceView.setEGLContextFactory(factory);
-            } else {
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setEGLContextFactory(factory);
-                    }
-                });
-            }
+        if (mGLSurfaceView != null) {
+            mGLSurfaceView.setEGLContextFactory(factory);
+        } else {
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setEGLContextFactory(factory);
+                }
+            });
         }
     }
 
     public void setEGLWindowSurfaceFactory(final GLSurfaceView.EGLWindowSurfaceFactory factory) {
         Log.v(LOG_TAG, "GLEngine.setEGLContextFactory()");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                mGLSurfaceView.setEGLWindowSurfaceFactory(factory);
-            } else {
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setEGLWindowSurfaceFactory(factory);
-                    }
-                });
-            }
+        if (mGLSurfaceView != null) {
+            mGLSurfaceView.setEGLWindowSurfaceFactory(factory);
+        } else {
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setEGLWindowSurfaceFactory(factory);
+                }
+            });
         }
     }
 
     public void setEGLConfigChooser(final GLSurfaceView.EGLConfigChooser configChooser) {
         Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(EGLConfigChooser)");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                mGLSurfaceView.setEGLConfigChooser(configChooser);
-            } else {
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setEGLConfigChooser(configChooser);
-                    }
-                });
-            }
+        if (mGLSurfaceView != null) {
+            mGLSurfaceView.setEGLConfigChooser(configChooser);
+        } else {
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setEGLConfigChooser(configChooser);
+                }
+            });
         }
     }
 
     public void setEGLConfigChooser(final boolean needDepth) {
-         Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(boolean)");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                mGLSurfaceView.setEGLConfigChooser(needDepth);
-            } else {
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setEGLConfigChooser(needDepth);
-                    }
-                });
-            }
+        Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(boolean)");
+        if (mGLSurfaceView != null) {
+            mGLSurfaceView.setEGLConfigChooser(needDepth);
+        } else {
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setEGLConfigChooser(needDepth);
+                }
+            });
         }
     }
 
     public void setEGLConfigChooser(final int redSize, final int greenSize, final int blueSize,
                                     final int alphaSize, final int depthSize, final int stencilSize) {
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
-                mGLSurfaceView.setEGLConfigChooser(redSize, greenSize, blueSize,
-                        alphaSize, depthSize, stencilSize);
-            } else {
-                Log.v(LOG_TAG, "PENDING: GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setEGLConfigChooser(redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize);
-                    }
-                });
-            }
+        if (mGLSurfaceView != null) {
+            Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
+            mGLSurfaceView.setEGLConfigChooser(redSize, greenSize, blueSize,
+                    alphaSize, depthSize, stencilSize);
+        } else {
+            Log.v(LOG_TAG, "PENDING: GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setEGLConfigChooser(redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize);
+                }
+            });
         }
     }
 
     public void setEGLContextClientVersion(final int version) {
         Log.v(LOG_TAG, "GLEngine.setEGLContextClientVersion()");
-        synchronized (lock) {
-            Method method = null;
+        Method method = null;
 
+        try {
+            //the setEGLContextClientVersion method is first available in api level 8, but we would
+            //like to support compiling against api level 7
+            method = GLSurfaceView.class.getMethod("setEGLContextClientVersion", int.class);
+        } catch (NoSuchMethodException ex) {
+            return;
+        }
+
+        if (mGLSurfaceView != null) {
             try {
-                //the setEGLContextClientVersion method is first available in api level 8, but we would
-                //like to support compiling against api level 7
-                method = GLSurfaceView.class.getMethod("setEGLContextClientVersion", int.class);
-            } catch (NoSuchMethodException ex) {
+                method.invoke(mGLSurfaceView, version);
+            } catch (IllegalAccessException ex) {
+                return;
+            } catch (InvocationTargetException ex) {
                 return;
             }
-
-            if (mGLSurfaceView != null) {
-                try {
-                    method.invoke(mGLSurfaceView, version);
-                } catch (IllegalAccessException ex) {
-                    return;
-                } catch (InvocationTargetException ex) {
-                    return;
+        } else {
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setEGLContextClientVersion(version);
                 }
-            } else {
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setEGLContextClientVersion(version);
-                    }
-                });
-            }
+            });
         }
     }
 
     public void setRenderMode(final int renderMode) {
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                Log.v(LOG_TAG, "GLEngine.setRenderMode(int)");
-                mGLSurfaceView.setRenderMode(renderMode);
-            } else {
-                Log.v(LOG_TAG, "PENDING: GLEngine.setRenderMode(int)");
-                this.renderMode = renderMode;
-                pendingOperations.add(new Runnable() {
-                    public void run() {
-                        setRenderMode(renderMode);
-                    }
-                });
-            }
+        if (mGLSurfaceView != null) {
+            Log.v(LOG_TAG, "GLEngine.setRenderMode(int)");
+            mGLSurfaceView.setRenderMode(renderMode);
+        } else {
+            Log.v(LOG_TAG, "PENDING: GLEngine.setRenderMode(int)");
+            this.renderMode = renderMode;
+            pendingOperations.add(new Runnable() {
+                public void run() {
+                    setRenderMode(renderMode);
+                }
+            });
         }
     }
 
     public int getRenderMode() {
         Log.v(LOG_TAG, "GLEngine.getRenderMode()");
-        synchronized (lock) {
-            if (mGLSurfaceView != null) {
-                return mGLSurfaceView.getRenderMode();
-            } else {
-                return renderMode;
-            }
+        if (mGLSurfaceView != null) {
+            return mGLSurfaceView.getRenderMode();
+        } else {
+            return renderMode;
         }
     }
 
@@ -392,13 +371,11 @@ public abstract class GLWallpaperService extends WallpaperService {
         @Override
         public void onSurfaceCreated(SurfaceHolder holder) {
             Log.v(LOG_TAG, "GLEngine.onSurfaceCreated()");
-            synchronized (lock) {
-                if (mGLSurfaceView == null) {
-                    mSurfaceHolder = holder;
-                    surfaceCreatedCallBack(); // Init Godot first to set use_32 boolean
-                    mGLSurfaceView = getGLSurfaceView();
-                    runPendingOperations();
-                }
+            if (mGLSurfaceView == null) {
+                mSurfaceHolder = holder;
+                surfaceCreatedCallBack(); // Init Godot first to set use_32 boolean
+                mGLSurfaceView = getGLSurfaceView();
+                runPendingOperations();
             }
         }
 

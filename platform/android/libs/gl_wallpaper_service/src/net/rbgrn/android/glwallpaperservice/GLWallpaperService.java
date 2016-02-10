@@ -57,16 +57,28 @@ import java.util.List;
 public abstract class GLWallpaperService extends WallpaperService {
     private static final String LOG_TAG = "GLWallpaperService";
 
-    private GLSurfaceView mGLSurfaceView = null;
+    protected GLSurfaceView mGLSurfaceView = null;
     protected SurfaceHolder mSurfaceHolder = null;
-    protected boolean mIsInitialized = false;
-    private int mFocusCount = 0;
-    private static int lastId = 0;
+
+    private static int mEngineCount = 0;
+    protected int mCurrentId = 0;
+
+    /**
+     * If we don't have a GLSurfaceView yet, then we queue up any operations that are requested, until the
+     * GLSurfaceView is created.
+     *
+     * Initially, we created the glSurfaceView in the GLEngine constructor, and things seemed to work. However,
+     * it turns out a few devices aren't set up to handle the surface related events at this point, and crash.
+     *
+     * This is a work around so that we can delay the creation of the GLSurfaceView until the surface is actually
+     * created, so that the underlying code should be in a state to be able to handle the surface related events
+     * that get fired when GLSurfaceView is created.
+     */
+    protected List<Runnable> pendingOperations = new ArrayList<Runnable>();
 
     @Override
     public void onDestroy() {
         Log.v(LOG_TAG, "GLWallpaperService.onDestroy()");
-        mGLSurfaceView.surfaceDestroyed(mSurfaceHolder);
         super.onDestroy();
     }
 
@@ -81,34 +93,25 @@ public abstract class GLWallpaperService extends WallpaperService {
 
         private int debugFlags;
         private int renderMode;
-        protected int myId;
+        protected int mId;
 
-        /**
-         * If we don't have a GLSurfaceView yet, then we queue up any operations that are requested, until the
-         * GLSurfaceView is created.
-         *
-         * Initially, we created the glSurfaceView in the GLEngine constructor, and things seemed to work. However,
-         * it turns out a few devices aren't set up to handle the surface related events at this point, and crash.
-         *
-         * This is a work around so that we can delay the creation of the GLSurfaceView until the surface is actually
-         * created, so that the underlying code should be in a state to be able to handle the surface related events
-         * that get fired when GLSurfaceView is created.
-         */
-        private List<Runnable> pendingOperations = new ArrayList<Runnable>();
+        protected int mFormat;
+        protected int mWidth;
+        protected int mHeight;
 
         public GLEngine() {
-            lastId += 1;
-            myId = lastId;
-            Log.v(LOG_TAG, "GLEngine.GLEngine("+myId+")");
+            Log.v(LOG_TAG, "GLEngine.GLEngine()");
+
+            mEngineCount += 1;
+            mId = mEngineCount;
         }
 
         public GLSurfaceView getGLSurfaceView() {
-            Log.v(LOG_TAG, "GLEngine.getGLSurfaceView("+myId+")");
+            Log.v(LOG_TAG, "GLEngine.getGLSurfaceView()");
     		// Sub-classes that need a special version of GLSurfaceView can override this method.
         	return new GLSurfaceView(GLWallpaperService.this){
                 @Override
                 public SurfaceHolder getHolder() {
-                    Log.v(LOG_TAG, "GLSurfaceViewSubClass.getHolder("+myId+")");
                    /*
                     When the View tries to get a Surface, it should forward that ask to a
                     WallpaperService.Engine so that it can draw on a Surface that's attached to a
@@ -127,14 +130,13 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
         
         public void setGLWrapper(final GLSurfaceView.GLWrapper glWrapper) {
+            Log.v(LOG_TAG, "GLEngine.setGLWrapper()");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setGLWrapper("+myId+")");
                     mGLSurfaceView.setGLWrapper(glWrapper);
                 } else {
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setGLWrapper("+myId+")");
                             setGLWrapper(glWrapper);
                         }
                     });
@@ -143,15 +145,14 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void setDebugFlags(final int debugFlags) {
+            Log.v(LOG_TAG, "GLEngine.setDebugFlags()");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setDebugFlags("+myId+")");
                     mGLSurfaceView.setDebugFlags(debugFlags);
                 } else {
                     this.debugFlags = debugFlags;
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setDebugFlags("+myId+")");
                             setDebugFlags(debugFlags);
                         }
                     });
@@ -160,7 +161,7 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public int getDebugFlags() {
-            Log.v(LOG_TAG, "GLEngine.getDebugFlags("+myId+")");
+            Log.v(LOG_TAG, "GLEngine.getDebugFlags()");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
                     return mGLSurfaceView.getDebugFlags();
@@ -173,15 +174,15 @@ public abstract class GLWallpaperService extends WallpaperService {
         public void setRenderer(final GLSurfaceView.Renderer renderer) {
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setRenderer("+myId+")");
+                    Log.v(LOG_TAG, "GLEngine.setRenderer()");
                     mGLSurfaceView.setRenderer(renderer);
                     if (!isVisible()) {
                         mGLSurfaceView.onPause();
                     }
                 } else {
+                    Log.v(LOG_TAG, "PENDING: GLEngine.setRenderer()");
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setRenderer("+myId+")*");
                             setRenderer(renderer);
                         }
                     });
@@ -190,14 +191,13 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void queueEvent(final Runnable r) {
+            Log.v(LOG_TAG, "GLEngine.queueEvent()");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.queueEvent("+myId+")");
                     mGLSurfaceView.queueEvent(r);
                 } else {
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.queueEvent("+myId+")");
                             queueEvent(r);
                         }
                     });
@@ -206,14 +206,13 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void setEGLContextFactory(final GLSurfaceView.EGLContextFactory factory) {
+            Log.v(LOG_TAG, "GLEngine.setEGLContextFactory()");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setEGLContextFactory("+myId+")");
                     mGLSurfaceView.setEGLContextFactory(factory);
                 } else {
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setEGLContextFactory("+myId+")");
                             setEGLContextFactory(factory);
                         }
                     });
@@ -222,14 +221,13 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void setEGLWindowSurfaceFactory(final GLSurfaceView.EGLWindowSurfaceFactory factory) {
+            Log.v(LOG_TAG, "GLEngine.setEGLContextFactory()");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setEGLContextFactory("+myId+")");
                     mGLSurfaceView.setEGLWindowSurfaceFactory(factory);
                 } else {
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setEGLContextFactory("+myId+")");
                             setEGLWindowSurfaceFactory(factory);
                         }
                     });
@@ -238,14 +236,13 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void setEGLConfigChooser(final GLSurfaceView.EGLConfigChooser configChooser) {
+            Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(EGLConfigChooser)");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(EGLConfigChooser "+myId+")");
                     mGLSurfaceView.setEGLConfigChooser(configChooser);
                 } else {
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(EGLConfigChooser "+myId+")");
                             setEGLConfigChooser(configChooser);
                         }
                     });
@@ -254,14 +251,13 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void setEGLConfigChooser(final boolean needDepth) {
+             Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(boolean)");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(boolean "+myId+")");
                     mGLSurfaceView.setEGLConfigChooser(needDepth);
                 } else {
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(boolean "+myId+")");
                             setEGLConfigChooser(needDepth);
                         }
                     });
@@ -273,13 +269,13 @@ public abstract class GLWallpaperService extends WallpaperService {
             final int alphaSize, final int depthSize, final int stencilSize) {
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(int,int,int,int,int,int "+myId+")");
+                    Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
                     mGLSurfaceView.setEGLConfigChooser(redSize, greenSize, blueSize,
                         alphaSize, depthSize, stencilSize);
                 } else {
+                    Log.v(LOG_TAG, "PENDING: GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(int,int,int,int,int,int "+myId+")");
                             setEGLConfigChooser(redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize);
                         }
                     });
@@ -288,6 +284,7 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void setEGLContextClientVersion(final int version) {
+            Log.v(LOG_TAG, "GLEngine.setEGLContextClientVersion()");
             synchronized (lock) {
                 Method method = null;
 
@@ -300,7 +297,6 @@ public abstract class GLWallpaperService extends WallpaperService {
                 }
 
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setEGLContextClientVersion("+myId+")");
                     try {
                         method.invoke(mGLSurfaceView, version);
                     } catch (IllegalAccessException ex) {
@@ -311,7 +307,6 @@ public abstract class GLWallpaperService extends WallpaperService {
                 } else {
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                            Log.v(LOG_TAG, "GLEngine.setEGLContextClientVersion("+myId+")");
                             setEGLContextClientVersion(version);
                         }
                     });
@@ -322,13 +317,13 @@ public abstract class GLWallpaperService extends WallpaperService {
         public void setRenderMode(final int renderMode) {
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
-                    Log.v(LOG_TAG, "GLEngine.setRenderMode(int "+myId+")");
+                    Log.v(LOG_TAG, "GLEngine.setRenderMode(int)");
                     mGLSurfaceView.setRenderMode(renderMode);
                 } else {
+                    Log.v(LOG_TAG, "PENDING: GLEngine.setRenderMode(int)");
                     this.renderMode = renderMode;
                     pendingOperations.add(new Runnable() {
                         public void run() {
-                           Log.v(LOG_TAG, "GLEngine.setRenderMode(int "+myId+")*");
                             setRenderMode(renderMode);
                         }
                     });
@@ -337,7 +332,7 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public int getRenderMode() {
-            Log.v(LOG_TAG, "GLEngine.getRenderMode("+myId+")");
+            Log.v(LOG_TAG, "GLEngine.getRenderMode()");
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
                     return mGLSurfaceView.getRenderMode();
@@ -348,8 +343,8 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void requestRender() {
+            Log.v(LOG_TAG, "GLEngine.requestRender()");
             if (mGLSurfaceView != null) {
-                Log.v(LOG_TAG, "GLEngine.requestRender("+myId+")");
                 mGLSurfaceView.requestRender();
             }
         }
@@ -357,39 +352,28 @@ public abstract class GLWallpaperService extends WallpaperService {
         @Override
         public void onVisibilityChanged(final boolean visible) {
             super.onVisibilityChanged(visible);
-
-            synchronized (lock) {
-                if (mGLSurfaceView != null) {
-                	Log.v(LOG_TAG, "GLEngine.onVisibilityChanged("+visible+", "+myId+")");
-                    if (visible) {
-                        Log.v(LOG_TAG, "SET("+myId+"): mSurfaceHolder, "+myId);
-                        GLWallpaperService.this.mSurfaceHolder = getSurfaceHolder(); //MAINT: I neeed to know why this works.
-                        if (mFocusCount == 0){
-                            mGLSurfaceView.onResume();
-                            resumeCallBack();
-                        }
-                        mFocusCount++;
-                    } else {
-                        mFocusCount--;
-                        if (mFocusCount == 0){
-                            mGLSurfaceView.onPause();
-                            pauseCallBack();
+            final SurfaceHolder holder = getSurfaceHolder();
+            final boolean aquireLock = true;
+            if (mCurrentId != 0 && mCurrentId != mId){
+                Log.v(LOG_TAG, mId+": PENDING: GLEngine.onVisibilityChanged("+visible+")");
+                pendingOperations.add(new Runnable() {
+                    public void run() {
+                        if (visible) {
+                            renderSetup(holder, aquireLock);
+                        } else {
+                            renderTearDown(holder, 0);
                         }
                     }
-                } else {
-                    pendingOperations.add(new Runnable() {
-                        public void run() {
-                        	Log.v(LOG_TAG, "GLEngine.onVisibilityChanged("+visible+","+myId+")");
-                            if (visible) {
-                                mGLSurfaceView.onResume();
-                                resumeCallBack();
-                            } else {
-                                mGLSurfaceView.onPause();
-                                pauseCallBack();
-                            }
-                        }
-                    });
-                }
+                });
+                return;
+            }
+
+            Log.v(LOG_TAG, mId+": GLEngine.onVisibilityChanged("+visible+")");
+            if (visible) {
+                renderSetup(holder, aquireLock);
+            } else {
+                renderTearDown(holder, 0);
+                runPendingOperations();
             }
         }
         public void resumeCallBack() {}
@@ -397,54 +381,62 @@ public abstract class GLWallpaperService extends WallpaperService {
 
         @Override
         public void onSurfaceChanged(final SurfaceHolder holder, final int format, final int width, final int height) {
-            synchronized (lock) {
-                Log.v(LOG_TAG, "SET("+myId+"): mSurfaceHolder, "+myId);
-                GLWallpaperService.this.mSurfaceHolder = holder; //MAINT: I neeed to know why this works.
-                if (mGLSurfaceView != null) {
-                	Log.v(LOG_TAG, "GLEngine.onSurfaceChanged("+myId+")");
-                    mGLSurfaceView.surfaceChanged(holder, format, width, height);
-                } else {
-                    pendingOperations.add(new Runnable() {
-                        public void run() {
-                        	Log.v(LOG_TAG, "GLEngine.onSurfaceChanged("+myId+")");
-                            onSurfaceChanged(holder, format, width, height);
-                        }
-                    });
-                }
-            }
+            Log.v(LOG_TAG, "GLEngine.onSurfaceChanged()");
+            mFormat = format;
+            mWidth = width;
+            mHeight = height;
         }
 
         @Override
-        public void onSurfaceCreated(SurfaceHolder holder) {
-            Log.v(LOG_TAG, "GLEngine.onSurfaceCreated("+myId+")");
+        public void onSurfaceCreated(final SurfaceHolder holder) {
+            Log.v(LOG_TAG, "GLEngine.onSurfaceCreated()");
             synchronized (lock) {
-                Log.v(LOG_TAG, "SET("+myId+"): mSurfaceHolder, "+myId);
-                GLWallpaperService.this.mSurfaceHolder = holder; //MAINT: I neeed to know why this works.
-                mIsInitialized = true;  // Do we need this? Just check if mSurfaceHolder != null
                 if (mGLSurfaceView == null) {
+                    mSurfaceHolder = holder;
                     surfaceCreatedCallBack(); // Init Godot first to set use_32 boolean
                     mGLSurfaceView = getGLSurfaceView();
-                    for (Runnable pendingOperation: pendingOperations) {
-                        pendingOperation.run();
-                    }
-                    pendingOperations.clear();
+                    runPendingOperations();
                 }
-                mGLSurfaceView.surfaceCreated(holder);
             }
         }
         public void surfaceCreatedCallBack() {}
 
         @Override
         public void onSurfaceDestroyed(SurfaceHolder holder) {
-            Log.v(LOG_TAG, "GLEngine.onSurfaceDestroyed("+myId+")");
-            /*
-             * Shouldnt we be able to destroy the surface? We dont need this one 
-             * anymore...
-             * synchronized (lock) {
-             *   if (mGLSurfaceView != null) {
-             *       mGLSurfaceView.surfaceDestroyed(holder);
-             *   }
-            }*/
+            Log.v(LOG_TAG, "GLEngine.onSurfaceDestroyed()");
+            if (mCurrentId != mId && mCurrentId != 0){
+                Log.v(LOG_TAG, "REBOOT!!!");
+                renderTearDown(mSurfaceHolder, mCurrentId);
+            }
+        }
+
+        public void renderSetup(SurfaceHolder holder, boolean aquireLock){
+            Log.v(LOG_TAG, "GLEngine.renderSetup()");
+            if (aquireLock) {
+                mCurrentId = mId;
+                mSurfaceHolder = holder;
+            }
+            mGLSurfaceView.surfaceCreated(holder);
+            mGLSurfaceView.surfaceChanged(holder, mFormat, mWidth, mHeight);
+            mGLSurfaceView.onResume();
+            resumeCallBack();
+        }
+
+        public void renderTearDown( SurfaceHolder holder, int id){
+            Log.v(LOG_TAG, "GLEngine.renderTearDown()");
+            mGLSurfaceView.onPause();
+            pauseCallBack();
+            mGLSurfaceView.surfaceDestroyed(holder);
+            mCurrentId = id;
+        }
+
+        public void runPendingOperations(){
+            Log.v(LOG_TAG, "GLEngine.runPendingOperations()");
+            for (Runnable pendingOperation: pendingOperations) {
+                pendingOperation.run();
+            }
+            Log.v(LOG_TAG, "Done.");
+            pendingOperations.clear();
         }
     }
 }

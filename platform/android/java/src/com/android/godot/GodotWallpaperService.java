@@ -57,8 +57,8 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 		public GodotWallpaperEngine() {
 			super();
-	        Log.v(LOG_TAG, "GodotWallpaperEngine.GodotWallpaperEngine("+myId+")");
-			if (!mIsInitialized){
+	        Log.v(LOG_TAG, "GodotWallpaperEngine.GodotWallpaperEngine("+mId+")");
+            if (mGLSurfaceView == null) {
 				// handle prefs, other initialization
 				renderer = new GodotWallpaperRenderer();
 				setRenderer(renderer);
@@ -68,11 +68,17 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 		public void onDestroy() {
 			super.onDestroy();
-	        Log.v(LOG_TAG, "GodotWallpaperEngine.onDestroy("+myId+")");
+	        Log.v(LOG_TAG, "GodotWallpaperEngine.onDestroy("+mId+")");
+
+            if (mCurrentId != mId && mCurrentId != 0){
+                Log.v(LOG_TAG, "REBOOT!!!");
+                boolean aquireLock = false;
+                renderSetup(mSurfaceHolder, aquireLock);
+            }
 		}
 		
         public GLSurfaceView getGLSurfaceView() {
-            Log.v(LOG_TAG, "GodotWallpaperEngine.getGLSurfaceView("+myId+")");
+            Log.v(LOG_TAG, "GodotWallpaperEngine.getGLSurfaceView("+mId+")");
             boolean use_gl2 = true;
             boolean use_32_bits=GodotWallpaperService.use_32_bit;
             boolean use_reload=BaseIO.needsReloadHooks();
@@ -81,7 +87,7 @@ public class GodotWallpaperService extends GLWallpaperService {
         	return new GLBaseView(GodotWallpaperService.this, use_gl2, use_32_bits, use_reload){
                 @Override
                 public SurfaceHolder getHolder() {
-                    Log.v(LOG_TAG, "GLBaseViewSubClass.getHolder("+myId+")");
+                    Log.v(LOG_TAG, "GLBaseViewSubClass.getHolder("+mId+")");
                     /*
                     When the View tries to get a Surface, it should forward that ask to a
                     WallpaperService.Engine so that it can draw on a Surface that's attached to a
@@ -100,7 +106,7 @@ public class GodotWallpaperService extends GLWallpaperService {
         }
         
         public void surfaceCreatedCallBack() {
-            Log.v(LOG_TAG, "GodotWallpaperEngine.surfaceCreatedCallBack("+myId+")");
+            Log.v(LOG_TAG, "GodotWallpaperEngine.surfaceCreatedCallBack("+mId+")");
         	// Now that we have surface, we can init GL context
             if (!GodotWallpaperService.this.godot_initialized){
             	
@@ -122,11 +128,11 @@ public class GodotWallpaperService extends GLWallpaperService {
 
         // Handle onVisibilityChanged()
         public void resumeCallBack() {
-            Log.v(LOG_TAG, "GodotWallpaperEngine.resumeCallBack("+myId+")");
+            Log.v(LOG_TAG, "GodotWallpaperEngine.resumeCallBack("+mId+")");
         	GodotLib.focusin();
         }
         public void pauseCallBack() {
-            Log.v(LOG_TAG, "GodotWallpaperEngine.pauseCallBack("+myId+")");
+            Log.v(LOG_TAG, "GodotWallpaperEngine.pauseCallBack("+mId+")");
         	GodotLib.focusout();
         }
 	}

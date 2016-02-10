@@ -44,6 +44,7 @@
 
 package net.rbgrn.android.glwallpaperservice;
 
+import android.graphics.Rect;
 import android.opengl.GLSurfaceView;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
@@ -62,6 +63,7 @@ public abstract class GLWallpaperService extends WallpaperService {
 
     private static int mEngineCount = 0;
     protected int mCurrentId = 0;
+    protected int mFormat;
 
     /**
      * If we don't have a GLSurfaceView yet, then we queue up any operations that are requested, until the
@@ -86,18 +88,15 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public class GLEngine extends WallpaperService.Engine {
-	public final static int RENDERMODE_WHEN_DIRTY = 0;
-	public final static int RENDERMODE_CONTINUOUSLY = 1;
+        public final static int RENDERMODE_WHEN_DIRTY = 0;
+        public final static int RENDERMODE_CONTINUOUSLY = 1;
 
         private Object lock = new Object();
 
         private int debugFlags;
         private int renderMode;
-        protected int mId;
 
-        protected int mFormat;
-        protected int mWidth;
-        protected int mHeight;
+        protected int mId;
 
         public GLEngine() {
             Log.v(LOG_TAG, "GLEngine.GLEngine()");
@@ -108,11 +107,11 @@ public abstract class GLWallpaperService extends WallpaperService {
 
         public GLSurfaceView getGLSurfaceView() {
             Log.v(LOG_TAG, "GLEngine.getGLSurfaceView()");
-    		// Sub-classes that need a special version of GLSurfaceView can override this method.
-        	return new GLSurfaceView(GLWallpaperService.this){
+           // Sub-classes that need a special version of GLSurfaceView can override this method.
+            return new GLSurfaceView(GLWallpaperService.this){
                 @Override
                 public SurfaceHolder getHolder() {
-                   /*
+                    /*
                     When the View tries to get a Surface, it should forward that ask to a
                     WallpaperService.Engine so that it can draw on a Surface that's attached to a
                     window on the screen.  In the old design, every View had its own Engine to grab
@@ -126,9 +125,9 @@ public abstract class GLWallpaperService extends WallpaperService {
                      */
                     return GLWallpaperService.this.mSurfaceHolder;
                 }
-        	};
+            };
         }
-        
+
         public void setGLWrapper(final GLSurfaceView.GLWrapper glWrapper) {
             Log.v(LOG_TAG, "GLEngine.setGLWrapper()");
             synchronized (lock) {
@@ -266,12 +265,12 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void setEGLConfigChooser(final int redSize, final int greenSize, final int blueSize,
-            final int alphaSize, final int depthSize, final int stencilSize) {
+                                        final int alphaSize, final int depthSize, final int stencilSize) {
             synchronized (lock) {
                 if (mGLSurfaceView != null) {
                     Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
                     mGLSurfaceView.setEGLConfigChooser(redSize, greenSize, blueSize,
-                        alphaSize, depthSize, stencilSize);
+                            alphaSize, depthSize, stencilSize);
                 } else {
                     Log.v(LOG_TAG, "PENDING: GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
                     pendingOperations.add(new Runnable() {
@@ -380,15 +379,15 @@ public abstract class GLWallpaperService extends WallpaperService {
         public void pauseCallBack() {}
 
         @Override
-        public void onSurfaceChanged(final SurfaceHolder holder, final int format, final int width, final int height) {
-            Log.v(LOG_TAG, "GLEngine.onSurfaceChanged()");
+        public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            Log.v(LOG_TAG, "GLEngine.onSurfaceChanged("+format+", "+width+", "+height+")");
+            // No need to store the width and height. We can get that info from
+            // the SurfaceHolder.getSurfaceFrame() method.
             mFormat = format;
-            mWidth = width;
-            mHeight = height;
         }
 
         @Override
-        public void onSurfaceCreated(final SurfaceHolder holder) {
+        public void onSurfaceCreated(SurfaceHolder holder) {
             Log.v(LOG_TAG, "GLEngine.onSurfaceCreated()");
             synchronized (lock) {
                 if (mGLSurfaceView == null) {
@@ -417,7 +416,8 @@ public abstract class GLWallpaperService extends WallpaperService {
                 mSurfaceHolder = holder;
             }
             mGLSurfaceView.surfaceCreated(holder);
-            mGLSurfaceView.surfaceChanged(holder, mFormat, mWidth, mHeight);
+            Rect rect = holder.getSurfaceFrame();
+            mGLSurfaceView.surfaceChanged(holder, mFormat, rect.width(), rect.height());
             mGLSurfaceView.onResume();
             resumeCallBack();
         }

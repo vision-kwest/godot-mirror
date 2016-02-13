@@ -66,6 +66,7 @@ import java.io.IOException;
 
 import android.provider.Settings.Secure;
 import android.widget.FrameLayout;
+import android.util.Log;
 
 import org.godotengine.godot.input.*;
 
@@ -94,6 +95,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 {	
 
 	static final int MAX_SINGLETONS = 64;
+    private static final String LOG_TAG = "Godot";
 	private IStub mDownloaderClientStub;
     private IDownloaderService mRemoteService;
     private TextView mStatusText;
@@ -258,7 +260,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
         // ...add to FrameLayout
 		   layout.addView(edittext);
 		
-		mView = new GodotView(getApplication(),io,use_gl2,use_32_bits, this);
+		mView = new GodotView(getApplication(),io,use_gl2,use_32_bits);
 		layout.addView(mView,new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 		setKeepScreenOn(GodotLib.getGlobal("display/keep_screen_on").equals("True"));
 		
@@ -729,58 +731,19 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
 		    }
 	}
 
-	//@Override public boolean dispatchTouchEvent (MotionEvent event) {
-	public boolean gotTouchEvent(MotionEvent event) {
-
-		super.onTouchEvent(event);
-		int evcount=event.getPointerCount();
-		if (evcount==0)
-			return true;
-
-		int[] arr = new int[event.getPointerCount()*3];
-
-		for(int i=0;i<event.getPointerCount();i++) {
-
-			arr[i*3+0]=(int)event.getPointerId(i);
-			arr[i*3+1]=(int)event.getX(i);
-			arr[i*3+2]=(int)event.getY(i);
-		}
-
-		//System.out.printf("gaction: %d\n",event.getAction());
-		switch(event.getAction()&MotionEvent.ACTION_MASK) {
-
-			case MotionEvent.ACTION_DOWN: {
-				GodotLib.touch(0,0,evcount,arr);
-				//System.out.printf("action down at: %f,%f\n", event.getX(),event.getY());
-			} break;
-			case MotionEvent.ACTION_MOVE: {
-				GodotLib.touch(1,0,evcount,arr);
-				//for(int i=0;i<event.getPointerCount();i++) {
-				//	System.out.printf("%d - moved to: %f,%f\n",i, event.getX(i),event.getY(i));
-				//}
-			} break;
-			case MotionEvent.ACTION_POINTER_UP: {
-				final int indexPointUp = event.getActionIndex();
-				final int pointer_idx = event.getPointerId(indexPointUp); 
-				GodotLib.touch(4,pointer_idx,evcount,arr);
-				//System.out.printf("%d - s.up at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
-			} break;
-			case MotionEvent.ACTION_POINTER_DOWN: {
-				int pointer_idx = event.getActionIndex();
-				GodotLib.touch(3,pointer_idx,evcount,arr);
-				//System.out.printf("%d - s.down at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
-			} break;
-			case MotionEvent.ACTION_CANCEL:
-			case MotionEvent.ACTION_UP: {
-				GodotLib.touch(2,0,evcount,arr);
-				//for(int i=0;i<event.getPointerCount();i++) {
-				//	System.out.printf("%d - up! %f,%f\n",i, event.getX(i),event.getY(i));
-				//}
-			} break;
-
-		}
-		return true;
-	}
+	@Override public boolean onTouchEvent(MotionEvent event) {
+    	/*
+    	 * Forward the handling of user touch events to the single "global"
+    	 * renderer.
+    	 */
+        super.onTouchEvent(event);
+        Log.v(LOG_TAG, "Godot.onTouchEvent()");
+        boolean retval = true;
+        if (mView != null){
+        	retval = mView.mRenderer.onTouchEvent(event);
+        }
+    	return retval;
+    }
 
 	@Override public boolean onKeyMultiple(final int inKeyCode, int repeatCount, KeyEvent event) {
 		String s = event.getCharacters();

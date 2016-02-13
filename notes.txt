@@ -1,0 +1,54 @@
+# WALLPAPER
+
+platform/android/AndroidManifest.xml.template
+* declare the android.software.live_wallpaper feature
+* add the GodotWallpaperService component
+
+platform/android/java/res/xml/godot_wallpaper.xml
+* define the wallpaper *icon* for the wallpaper launcher
+* define the wallpaper *description* for the wallpaper launcher
+
+platform/android/java/src/org/godotengine/godot/GLWallpaperService.java
+* add GL Wallpaper service support
+
+# TOUCH EVENTS
+
+platform/android/java/src/org/godotengine/godot/Godot.java
+* don't pass Godot instance to GodotView constructor (for touch event handling)
+* remove gotTouchEvent()
+* override onTouchEvent() to forward touch events to the GodotView.Renderer
+
+platform/android/java/src/org/godotengine/godot/GodotView.java
+* after creating the GodotView.Renderer, in init(), store the renderer in a member var
+* remove Godot(Activity) member var (will use GodotView.Renderer member var to handle touch evnets instead)
+* declare GodotView.Renderer as public so other classes can us it to process touch events
+* add touch envent handling code to GodotView.Renderer
+* gut GodotView.Renderer.onDrawFrame(); can't use Godot.singleton_count, Godot.singletons
+* gut GodotView.Renderer.onSurfaceChanged(); can't use Godot.singleton_count, Godot.singletons
+
+# ContextWrapper vs Activity
+
+platform/android/java/src/org/godotengine/godot/GodotIO.java
+* replace specific Godot(Activity) member var with generic ContextWrapper var
+* gut showKeyboard(); no need for keyboard
+* gut hideKeyboard(); no need for keyboard and can't call Activity.getCurrentFocus()
+* gut setScreenOrientation(); can't call Activity.setRequestedOrientation()
+
+platform/android/java/src/org/godotengine/godot/GodotLib.java
+* add initializewallpaper(); which supports starting the Godot engine on a GodotWallpaperService 
+
+platform/android/java_glue.cpp
+* add initializewallpaper(); which supports starting the Godot engine on a GodotWallpaperService 
+
+platform/android/java_glue.h
+* add initializewallpaper(); which supports starting the Godot engine on a GodotWallpaperService
+
+# WALLPAPER & TOUCH EVENTS & ContextWrapper vs Activity
+
+platform/android/java/src/org/godotengine/godot/GodotWallpaperService.java
+* exploit the GLWallpaperService class to build a Godot Walpaper 
+* create stub method onVideoInit() for java_glue.cpp
+* create stub method setKeepScreenOn() for java_glue.cpp
+* gut GodotWallpaperEngine() initialization happends at GodotView contructor-time (when there is a Surface)
+* gut onDestroy(); no GodotView.Renderer.release() method
+* override onTouchEvent() to forward touch events to the GodotView.Renderer

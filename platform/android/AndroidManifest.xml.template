@@ -5,6 +5,11 @@
       android:versionName="1.0"
       android:installLocation="auto"
       >
+
+<uses-feature
+    android:name="android.software.live_wallpaper"
+    android:required="true" />
+
 <supports-screens android:smallScreens="true"
                       android:normalScreens="true"
                       android:largeScreens="false"
@@ -25,6 +30,18 @@
         </activity>
 	<service android:name="org.godotengine.godot.GodotDownloaderService" />
 
+	<service
+         android:name="org.godotengine.godot.GodotWallpaperService"
+         android:enabled="true"
+         android:label="@string/godot_project_name_string"
+         android:permission="android.permission.BIND_WALLPAPER" >
+         <intent-filter android:priority="1" >
+             <action android:name="android.service.wallpaper.WallpaperService" />
+         </intent-filter>
+         <meta-data
+             android:name="android.service.wallpaper"
+             android:resource="@xml/godot_wallpaper" />
+	</service>
 
   
 

@@ -48,6 +48,7 @@ import android.hardware.*;
 import android.content.*;
 import android.content.pm.ActivityInfo;
 import org.godotengine.godot.input.*;
+import android.content.ContextWrapper;
 //android.os.Build
 
 // Wrapper for native library
@@ -56,7 +57,7 @@ public class GodotIO {
 
 
 	AssetManager am;
-	Godot activity;
+	ContextWrapper contextWrapper;
 	GodotEditText edit;
 
 	Context applicationContext;
@@ -359,13 +360,13 @@ public class GodotIO {
 
 
 
-	GodotIO(Godot p_activity) {
+	GodotIO(ContextWrapper p_contextWrapper) {
 
-		am=p_activity.getAssets();
-		activity=p_activity;
+		am=p_contextWrapper.getAssets();
+		contextWrapper=p_contextWrapper;
 		streams=new HashMap<Integer,AssetData>();
 		dirs=new HashMap<Integer,AssetDir>();
-		applicationContext = activity.getApplicationContext();
+		applicationContext = contextWrapper.getApplicationContext();
 
 	}
 
@@ -491,7 +492,7 @@ public class GodotIO {
 				intent.setData(Uri.parse(path));
 			}
 
-			activity.startActivity(intent);
+			contextWrapper.startActivity(intent);
 			return 0;
 		} catch (ActivityNotFoundException e) {
 
@@ -501,7 +502,7 @@ public class GodotIO {
 
 	public String getDataDir() {
 
-		return activity.getFilesDir().getAbsolutePath();
+		return contextWrapper.getFilesDir().getAbsolutePath();
 	}
 
 	public String getLocale() {
@@ -519,15 +520,19 @@ public class GodotIO {
 	}
 
 	public void showKeyboard(String p_existing_text) {
-		if(edit != null)
+		// The wallpaper does not need keyboard related functionality.
+/*		if(edit != null)
 			edit.showKeyboard(p_existing_text);
 
 		//InputMethodManager inputMgr = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
 		//inputMgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-	};
+*/	};
 
 	public void hideKeyboard() {
-		if(edit != null)
+		// The wallpaper does not need keyboard related functionality.
+		// The following method(s) are not available to WallpaperService classes:
+		// * Activity.getCurrentFocus()
+/*		if(edit != null)
 			edit.hideKeyboard();
 
         InputMethodManager inputMgr = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -536,11 +541,13 @@ public class GodotIO {
             inputMgr.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         } else {
             inputMgr.hideSoftInputFromWindow(new View(activity).getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-        }
+        }*/
 	};
 
 	public void setScreenOrientation(int p_orientation) {
-
+		// The following method(s) are not available to WallpaperService classes:
+		// * Activity.setRequestedOrientation()
+/*
 		switch(p_orientation) {
 
 			case SCREEN_LANDSCAPE: {
@@ -565,7 +572,7 @@ public class GodotIO {
 				activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
 			} break;
 
-		}
+		}*/
 	};
 	
 	public void setEdit(GodotEditText _edit) {

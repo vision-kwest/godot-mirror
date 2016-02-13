@@ -73,16 +73,14 @@ public class GodotView extends GLSurfaceView {
 	private static boolean use_gl2=false;
 	private static boolean use_32=false;
 
-	private Godot activity;
+	public GodotView.Renderer mRenderer = null;
 
-	public GodotView(Context context,GodotIO p_io,boolean p_use_gl2, boolean p_use_32_bits, Godot p_activity) {
+	public GodotView(Context context,GodotIO p_io,boolean p_use_gl2, boolean p_use_32_bits) {
 		super(context);
 		ctx=context;
 		io=p_io;
 		use_gl2=p_use_gl2;
 		use_32=p_use_32_bits;
-
-		activity = p_activity;
 
 		if (!p_io.needsReloadHooks()) {
 			//will only work on SDK 11+!!
@@ -96,11 +94,6 @@ public class GodotView extends GLSurfaceView {
 		super(context);
 		init(translucent, depth, stencil);
     }
-
-	@Override public boolean onTouchEvent (MotionEvent event) {
-
-		return activity.gotTouchEvent(event);
-	};
 
 	public int get_godot_button(int keyCode) {
 
@@ -381,7 +374,8 @@ public class GodotView extends GLSurfaceView {
 		}
 
 		/* Set the renderer responsible for frame rendering */
-		setRenderer(new Renderer());
+		mRenderer = new Renderer();
+		setRenderer(mRenderer);
 	}
 
 	private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
@@ -635,27 +629,83 @@ public class GodotView extends GLSurfaceView {
 		private int[] mValue = new int[1];
 	}
 
-	private static class Renderer implements GLSurfaceView.Renderer {
+	public static class Renderer implements GLSurfaceView.Renderer {
 
 
 		public void onDrawFrame(GL10 gl) {
 			GodotLib.step();
-			for(int i=0;i<Godot.singleton_count;i++) {
+/*			for(int i=0;i<Godot.singleton_count;i++) {
 				Godot.singletons[i].onGLDrawFrame(gl);
-			}
+			}*/
 		}
 
 		public void onSurfaceChanged(GL10 gl, int width, int height) {
 
 			GodotLib.resize(width, height,!firsttime);
 			firsttime=false;
-			for(int i=0;i<Godot.singleton_count;i++) {
+/*			for(int i=0;i<Godot.singleton_count;i++) {
 				Godot.singletons[i].onGLSurfaceChanged(gl, width, height);
-			}
+			}*/
 		}
 
 		public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 			GodotLib.newcontext(use_32);
 		}
+		
+		public boolean onTouchEvent(MotionEvent event) {
+	        //Log.v(LOG_TAG, "GodotWallpaperRenderer.onTouchEvent()");
+    		// This method is copied from Godot.gotTouchEvent()
+    		// It handles user touch events for the Godot Engine
+    		// Call this in onTouchEvent()
+
+    		//super.onTouchEvent(event);
+    		int evcount=event.getPointerCount();
+    		if (evcount==0)
+    			return true;
+
+    		int[] arr = new int[event.getPointerCount()*3];
+
+    		for(int i=0;i<event.getPointerCount();i++) {
+
+    			arr[i*3+0]=(int)event.getPointerId(i);
+    			arr[i*3+1]=(int)event.getX(i);
+    			arr[i*3+2]=(int)event.getY(i);
+    		}
+
+    		//System.out.printf("gaction: %d\n",event.getAction());
+    		switch(event.getAction()&MotionEvent.ACTION_MASK) {
+
+    			case MotionEvent.ACTION_DOWN: {
+    				GodotLib.touch(0,0,evcount,arr);
+    				//System.out.printf("action down at: %f,%f\n", event.getX(),event.getY());
+    			} break;
+    			case MotionEvent.ACTION_MOVE: {
+    				GodotLib.touch(1,0,evcount,arr);
+    				//for(int i=0;i<event.getPointerCount();i++) {
+    				//	System.out.printf("%d - moved to: %f,%f\n",i, event.getX(i),event.getY(i));
+    				//}
+    			} break;
+    			case MotionEvent.ACTION_POINTER_UP: {
+    				final int indexPointUp = event.getActionIndex();
+    				final int pointer_idx = event.getPointerId(indexPointUp); 
+    				GodotLib.touch(4,pointer_idx,evcount,arr);
+    				//System.out.printf("%d - s.up at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
+    			} break;
+    			case MotionEvent.ACTION_POINTER_DOWN: {
+    				int pointer_idx = event.getActionIndex();
+    				GodotLib.touch(3,pointer_idx,evcount,arr);
+    				//System.out.printf("%d - s.down at: %f,%f\n",pointer_idx, event.getX(pointer_idx),event.getY(pointer_idx));
+    			} break;
+    			case MotionEvent.ACTION_CANCEL:
+    			case MotionEvent.ACTION_UP: {
+    				GodotLib.touch(2,0,evcount,arr);
+    				//for(int i=0;i<event.getPointerCount();i++) {
+    				//	System.out.printf("%d - up! %f,%f\n",i, event.getX(i),event.getY(i));
+    				//}
+    			} break;
+
+    		}
+    		return true;
+    	}
 	}
 }

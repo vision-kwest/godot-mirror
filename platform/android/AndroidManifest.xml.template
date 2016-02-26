@@ -16,20 +16,17 @@
                       android:xlargeScreens="true"/>
 
     <application android:label="@string/godot_project_name_string" android:icon="@drawable/icon" android:allowBackup="false" $$ADD_APPATTRIBUTE_CHUNKS$$ >
-        <activity android:name="org.godotengine.godot.Godot"
-                  android:label="@string/godot_project_name_string"
-                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-                  android:launchMode="singleTask"
-                  android:screenOrientation="landscape"
-                  android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize">
-                                                                                                  
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 	<service android:name="org.godotengine.godot.GodotDownloaderService" />
-
+    <activity
+        android:name="org.godotengine.godot.SetWallpaperActivity"
+        android:label="@string/godot_project_name_string"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar"
+        android:excludeFromRecents="true" >
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>
 	<service
          android:name="org.godotengine.godot.GodotWallpaperService"
          android:enabled="true"

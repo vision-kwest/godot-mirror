@@ -22,21 +22,21 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 	public GodotWallpaperService() {
 		super();
-        Log.v(LOG_TAG, "GodotWallpaperService.GodotWallpaperService()");
+        //Log.v(LOG_TAG, "GodotWallpaperService.GodotWallpaperService()");
 	}
 	public Engine onCreateEngine() {
-        Log.v(LOG_TAG, "GodotWallpaperService.onCreateEngine()");
+        //Log.v(LOG_TAG, "GodotWallpaperService.onCreateEngine()");
 		GodotWallpaperEngine engine = new GodotWallpaperEngine();
 		return engine;
 	}
     public void forceQuit() {
-        Log.v(LOG_TAG, "GodotWallpaperService.forceQuit()");
+        //Log.v(LOG_TAG, "GodotWallpaperService.forceQuit()");
         // Godot callback that does the real quitting. Is called by step() after quit().
         System.exit(0);
     }
     
     public void onDestroy(){
-        Log.v(LOG_TAG, "GodotWallpaperService.onDestroy()");
+        //Log.v(LOG_TAG, "GodotWallpaperService.onDestroy()");
         // Kill renderer
 /*        if (mRenderer != null) {
         	mRenderer.release(); // assuming yours has this method - it should!
@@ -52,7 +52,7 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 	@Override
 	public void surfaceCreatedCallBack() {
-	    Log.v(LOG_TAG, "GodotWallpaperEngine.surfaceCreatedCallBack()");
+	    //Log.v(LOG_TAG, "GodotWallpaperEngine.surfaceCreatedCallBack()");
 		// Now that we have surface, we can init GL context
 	    if (!GodotWallpaperService.this.godot_initialized){
 	    	
@@ -75,13 +75,13 @@ public class GodotWallpaperService extends GLWallpaperService {
 	// Handle onVisibilityChanged()
 	@Override
 	public void resumeCallBack() {
-	    Log.v(LOG_TAG, "GodotWallpaperEngine.resumeCallBack()");
+	    //Log.v(LOG_TAG, "GodotWallpaperEngine.resumeCallBack()");
 		GodotLib.focusin();
 	}
 	
 	@Override
 	public void pauseCallBack() {
-	    Log.v(LOG_TAG, "GodotWallpaperEngine.pauseCallBack()");
+	    //Log.v(LOG_TAG, "GodotWallpaperEngine.pauseCallBack()");
 		GodotLib.focusout();
 	}
     	
@@ -131,7 +131,7 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 		public GodotWallpaperEngine() {
 			super();
-	        Log.v(LOG_TAG, "GodotWallpaperEngine.GodotWallpaperEngine("+mId+")");
+	        //Log.v(LOG_TAG, "GodotWallpaperEngine.GodotWallpaperEngine("+mId+")");
 	        // No need to call setRenderer() because it will happen at 
 	        // GodotView constructor-time. The RENDERMODE_CONTINUOUSLY setting 
 	        // is the default. By the time GodotView.GodotView() is called there
@@ -146,11 +146,11 @@ public class GodotWallpaperService extends GLWallpaperService {
 
 		public void onDestroy() {
 			super.onDestroy();
-	        Log.v(LOG_TAG, "GodotWallpaperEngine.onDestroy("+mId+")");
+	        //Log.v(LOG_TAG, "GodotWallpaperEngine.onDestroy("+mId+")");
 		}
 		
         public GLSurfaceView getGLSurfaceView() {
-            Log.v(LOG_TAG, "GodotWallpaperEngine.getGLSurfaceView("+mId+")");
+            //Log.v(LOG_TAG, "GodotWallpaperEngine.getGLSurfaceView("+mId+")");
             boolean use_gl2 = true;
             boolean use_32_bits=GodotWallpaperService.use_32_bit;
         	
@@ -160,7 +160,7 @@ public class GodotWallpaperService extends GLWallpaperService {
             GodotView retval = new GodotView(context,GodotWallpaperService.this.io,use_gl2,use_32_bits){
 								@Override
 								public SurfaceHolder getHolder() {
-									    Log.v(LOG_TAG, "GodotViewSubClass.getHolder("+mId+")");
+									    //Log.v(LOG_TAG, "GodotViewSubClass.getHolder("+mId+")");
 										/*
 										When the View tries to get a Surface, it should forward that ask to a
 										WallpaperService.Engine so that it can draw on a Surface that's attached to a
@@ -188,7 +188,7 @@ public class GodotWallpaperService extends GLWallpaperService {
         	 * renderer.
         	 */
             super.onTouchEvent(event);
-            Log.v(LOG_TAG, "GodotWallpaperEngine.onTouchEvent()");
+            //Log.v(LOG_TAG, "GodotWallpaperEngine.onTouchEvent()");
             //boolean retval = true;
         	if (mRenderer != null){ 
 	            //retval = mRenderer.onTouchEvent(event);

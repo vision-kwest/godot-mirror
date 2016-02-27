@@ -85,11 +85,11 @@ public abstract class GLWallpaperService extends WallpaperService {
 
     public GLWallpaperService() {
         super();
-        Log.v(LOG_TAG, "GLWallpaperService.GLWallpaperService()");
+        //Log.v(LOG_TAG, "GLWallpaperService.GLWallpaperService()");
     }
 
     public void setGLWrapper(final GLSurfaceView.GLWrapper glWrapper) {
-        Log.v(LOG_TAG, "GLEngine.setGLWrapper()");
+        //Log.v(LOG_TAG, "GLEngine.setGLWrapper()");
         if (mGLSurfaceView != null) {
             mGLSurfaceView.setGLWrapper(glWrapper);
         } else {
@@ -102,7 +102,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public void setDebugFlags(final int debugFlags) {
-        Log.v(LOG_TAG, "GLEngine.setDebugFlags()");
+        //Log.v(LOG_TAG, "GLEngine.setDebugFlags()");
         if (mGLSurfaceView != null) {
             mGLSurfaceView.setDebugFlags(debugFlags);
         } else {
@@ -116,7 +116,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public int getDebugFlags() {
-        Log.v(LOG_TAG, "GLEngine.getDebugFlags()");
+        //Log.v(LOG_TAG, "GLEngine.getDebugFlags()");
         if (mGLSurfaceView != null) {
             return mGLSurfaceView.getDebugFlags();
         } else {
@@ -126,7 +126,7 @@ public abstract class GLWallpaperService extends WallpaperService {
 
     public void setRenderer(final GLSurfaceView.Renderer renderer) {
         if (mGLSurfaceView != null) {
-            Log.v(LOG_TAG, "GLEngine.setRenderer()");
+            //Log.v(LOG_TAG, "GLEngine.setRenderer()");
             mGLSurfaceView.setRenderer(renderer);
             boolean isVisible = (mCurrentId != 0);
             if (!isVisible) {
@@ -134,7 +134,7 @@ public abstract class GLWallpaperService extends WallpaperService {
                 pauseCallBack();
             }
         } else {
-            Log.v(LOG_TAG, "PENDING: GLEngine.setRenderer()");
+            //Log.v(LOG_TAG, "PENDING: GLEngine.setRenderer()");
             pendingOperations.add(new Runnable() {
                 public void run() {
                     setRenderer(renderer);
@@ -144,7 +144,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public void queueEvent(final Runnable r) {
-        Log.v(LOG_TAG, "GLEngine.queueEvent()");
+        //Log.v(LOG_TAG, "GLEngine.queueEvent()");
         if (mGLSurfaceView != null) {
             mGLSurfaceView.queueEvent(r);
         } else {
@@ -157,7 +157,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public void setEGLContextFactory(final GLSurfaceView.EGLContextFactory factory) {
-        Log.v(LOG_TAG, "GLEngine.setEGLContextFactory()");
+        //Log.v(LOG_TAG, "GLEngine.setEGLContextFactory()");
         if (mGLSurfaceView != null) {
             mGLSurfaceView.setEGLContextFactory(factory);
         } else {
@@ -170,7 +170,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public void setEGLWindowSurfaceFactory(final GLSurfaceView.EGLWindowSurfaceFactory factory) {
-        Log.v(LOG_TAG, "GLEngine.setEGLContextFactory()");
+        //Log.v(LOG_TAG, "GLEngine.setEGLContextFactory()");
         if (mGLSurfaceView != null) {
             mGLSurfaceView.setEGLWindowSurfaceFactory(factory);
         } else {
@@ -183,7 +183,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public void setEGLConfigChooser(final GLSurfaceView.EGLConfigChooser configChooser) {
-        Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(EGLConfigChooser)");
+        //Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(EGLConfigChooser)");
         if (mGLSurfaceView != null) {
             mGLSurfaceView.setEGLConfigChooser(configChooser);
         } else {
@@ -196,7 +196,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public void setEGLConfigChooser(final boolean needDepth) {
-        Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(boolean)");
+        //Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(boolean)");
         if (mGLSurfaceView != null) {
             mGLSurfaceView.setEGLConfigChooser(needDepth);
         } else {
@@ -211,11 +211,11 @@ public abstract class GLWallpaperService extends WallpaperService {
     public void setEGLConfigChooser(final int redSize, final int greenSize, final int blueSize,
                                     final int alphaSize, final int depthSize, final int stencilSize) {
         if (mGLSurfaceView != null) {
-            Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
+            //Log.v(LOG_TAG, "GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
             mGLSurfaceView.setEGLConfigChooser(redSize, greenSize, blueSize,
                     alphaSize, depthSize, stencilSize);
         } else {
-            Log.v(LOG_TAG, "PENDING: GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
+            //Log.v(LOG_TAG, "PENDING: GLEngine.setEGLConfigChooser(int,int,int,int,int,int)");
             pendingOperations.add(new Runnable() {
                 public void run() {
                     setEGLConfigChooser(redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize);
@@ -225,7 +225,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public void setEGLContextClientVersion(final int version) {
-        Log.v(LOG_TAG, "GLEngine.setEGLContextClientVersion()");
+        //Log.v(LOG_TAG, "GLEngine.setEGLContextClientVersion()");
         Method method = null;
 
         try {
@@ -255,10 +255,10 @@ public abstract class GLWallpaperService extends WallpaperService {
 
     public void setRenderMode(final int renderMode) {
         if (mGLSurfaceView != null) {
-            Log.v(LOG_TAG, "GLEngine.setRenderMode(int)");
+            //Log.v(LOG_TAG, "GLEngine.setRenderMode(int)");
             mGLSurfaceView.setRenderMode(renderMode);
         } else {
-            Log.v(LOG_TAG, "PENDING: GLEngine.setRenderMode(int)");
+            //Log.v(LOG_TAG, "PENDING: GLEngine.setRenderMode(int)");
             this.renderMode = renderMode;
             pendingOperations.add(new Runnable() {
                 public void run() {
@@ -269,7 +269,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public int getRenderMode() {
-        Log.v(LOG_TAG, "GLEngine.getRenderMode()");
+        //Log.v(LOG_TAG, "GLEngine.getRenderMode()");
         if (mGLSurfaceView != null) {
             return mGLSurfaceView.getRenderMode();
         } else {
@@ -278,7 +278,7 @@ public abstract class GLWallpaperService extends WallpaperService {
     }
 
     public void requestRender() {
-        Log.v(LOG_TAG, "GLEngine.requestRender()");
+        //Log.v(LOG_TAG, "GLEngine.requestRender()");
         if (mGLSurfaceView != null) {
             mGLSurfaceView.requestRender();
         }
@@ -286,7 +286,7 @@ public abstract class GLWallpaperService extends WallpaperService {
 
     @Override
     public void onDestroy() {
-        Log.v(LOG_TAG, "GLWallpaperService.onDestroy()");
+        //Log.v(LOG_TAG, "GLWallpaperService.onDestroy()");
         super.onDestroy();
     }
 
@@ -303,14 +303,14 @@ public abstract class GLWallpaperService extends WallpaperService {
         protected int mId;
 
         public GLEngine() {
-            Log.v(LOG_TAG, "GLEngine.GLEngine()");
+            //Log.v(LOG_TAG, "GLEngine.GLEngine()");
 
             mEngineCount += 1;
             mId = mEngineCount;
         }
 
         public GLSurfaceView getGLSurfaceView() {
-            Log.v(LOG_TAG, "GLEngine.getGLSurfaceView()");
+            //Log.v(LOG_TAG, "GLEngine.getGLSurfaceView()");
            // Sub-classes that need a special version of GLSurfaceView can override this method.
             return new GLSurfaceView(GLWallpaperService.this){
                 @Override
@@ -338,7 +338,7 @@ public abstract class GLWallpaperService extends WallpaperService {
             final SurfaceHolder holder = getSurfaceHolder();
             final boolean aquireLock = true;
             if (isAnotherEngineRendering()){
-                Log.v(LOG_TAG, mId+": PENDING: GLEngine.onVisibilityChanged("+visible+")");
+                //Log.v(LOG_TAG, mId+": PENDING: GLEngine.onVisibilityChanged("+visible+")");
                 pendingOperations.add(new Runnable() {
                     public void run() {
                         if (visible) {
@@ -351,7 +351,7 @@ public abstract class GLWallpaperService extends WallpaperService {
                 return;
             }
 
-            Log.v(LOG_TAG, mId+": GLEngine.onVisibilityChanged("+visible+")");
+            //Log.v(LOG_TAG, mId+": GLEngine.onVisibilityChanged("+visible+")");
             if (visible) {
                 renderSetup(holder, aquireLock);
             } else {
@@ -362,7 +362,7 @@ public abstract class GLWallpaperService extends WallpaperService {
 
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            Log.v(LOG_TAG, "GLEngine.onSurfaceChanged("+format+", "+width+", "+height+")");
+            //Log.v(LOG_TAG, "GLEngine.onSurfaceChanged("+format+", "+width+", "+height+")");
             // No need to store the width and height. We can get that info from
             // the SurfaceHolder.getSurfaceFrame() method.
             mFormat = format;
@@ -370,7 +370,7 @@ public abstract class GLWallpaperService extends WallpaperService {
 
         @Override
         public void onSurfaceCreated(SurfaceHolder holder) {
-            Log.v(LOG_TAG, "GLEngine.onSurfaceCreated()");
+            //Log.v(LOG_TAG, "GLEngine.onSurfaceCreated()");
             if (mGLSurfaceView == null) {
                 mSurfaceHolder = holder;
                 surfaceCreatedCallBack(); // Init Godot first to set use_32 boolean & GodotIO member var
@@ -381,18 +381,18 @@ public abstract class GLWallpaperService extends WallpaperService {
 
         @Override
         public void onSurfaceDestroyed(SurfaceHolder holder) {
-            Log.v(LOG_TAG, "GLEngine.onSurfaceDestroyed()");
+            //Log.v(LOG_TAG, "GLEngine.onSurfaceDestroyed()");
             if (isAnotherEngineRendering()){
-                Log.v(LOG_TAG, "REBOOT!!!");
+                //Log.v(LOG_TAG, "REBOOT!!!");
                 renderTearDown(mSurfaceHolder, mCurrentId);
             }
         }
 
         @Override
         public void onDestroy() {
-            Log.v(LOG_TAG, "GLEngine.onDestroy()");
+            //Log.v(LOG_TAG, "GLEngine.onDestroy()");
             if (isAnotherEngineRendering()){
-                Log.v(LOG_TAG, "REBOOT!!!");
+                //Log.v(LOG_TAG, "REBOOT!!!");
                 boolean aquireLock = false;
                 renderSetup(mSurfaceHolder, aquireLock);
             }
@@ -406,7 +406,7 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void renderSetup(SurfaceHolder holder, boolean aquireLock){
-            Log.v(LOG_TAG, "GLEngine.renderSetup()");
+            //Log.v(LOG_TAG, "GLEngine.renderSetup()");
             if (aquireLock) {
                 mCurrentId = mId;
                 mSurfaceHolder = holder;
@@ -419,7 +419,7 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void renderTearDown( SurfaceHolder holder, int id){
-            Log.v(LOG_TAG, "GLEngine.renderTearDown()");
+            //Log.v(LOG_TAG, "GLEngine.renderTearDown()");
             mGLSurfaceView.onPause();
             pauseCallBack();
             mGLSurfaceView.surfaceDestroyed(holder);
@@ -427,11 +427,11 @@ public abstract class GLWallpaperService extends WallpaperService {
         }
 
         public void runPendingOperations(){
-            Log.v(LOG_TAG, "GLEngine.runPendingOperations()");
+            //Log.v(LOG_TAG, "GLEngine.runPendingOperations()");
             for (Runnable pendingOperation: pendingOperations) {
                 pendingOperation.run();
             }
-            Log.v(LOG_TAG, "Done.");
+            //Log.v(LOG_TAG, "Done.");
             pendingOperations.clear();
         }
     }

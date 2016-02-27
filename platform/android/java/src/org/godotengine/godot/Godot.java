@@ -737,7 +737,7 @@ public class Godot extends Activity implements SensorEventListener, IDownloaderC
     	 * renderer.
     	 */
         super.onTouchEvent(event);
-        Log.v(LOG_TAG, "Godot.onTouchEvent()");
+        //Log.v(LOG_TAG, "Godot.onTouchEvent()");
         boolean retval = true;
         if (mView != null){
         	retval = mView.mRenderer.onTouchEvent(event);

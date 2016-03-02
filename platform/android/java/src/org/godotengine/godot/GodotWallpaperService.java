@@ -44,8 +44,9 @@ public class GodotWallpaperService extends GLWallpaperService {
         mRenderer = null;
     	
     	if (GodotWallpaperService.this.godot_initialized){
-    		GodotLib.quit();
-    		GodotLib.step();
+    		//GodotLib.quit();
+    		//GodotLib.step();
+    		forceQuit();
         }
     	super.onDestroy();
     }
